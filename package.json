@@ -1,0 +1,16 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@oasisprotocol/sapphire-hardhat": "^2.19.4",
+    "hardhat": "^2.22.4"
+  },
+  "scripts": {
+    "deploy:testnet": "",
+    "deploy:mainnet": "",
+    "deploy-core:localhost": "NETWORK=localhost npx hardhat ignition deploy ./ignition/modules/Core.ts --network localhost"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
