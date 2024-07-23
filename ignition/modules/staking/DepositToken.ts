@@ -6,4 +6,10 @@ export default (
   vault: NamedArtifactContractDeploymentFuture<"VineVault">,
   trove: NamedArtifactContractDeploymentFuture<"TroveManager">,
   vineCore: NamedArtifactContractDeploymentFuture<"VineCore">
-) => {};
+) => {
+  const depositToken = m.contract("DepositToken", [vault, trove, vineCore], {
+    after: [vault, trove, vineCore],
+  });
+
+  return depositToken;
+};

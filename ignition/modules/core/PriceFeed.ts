@@ -4,10 +4,7 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 /* TODO: 
   add the correct band address
 */
-const bandProtocolAddr =
-  process.env.NETWORK === "testnet"
-    ? "0x4ed7c70f96b99c776995fb64377f0d4ab3b0e1c1"
-    : "0x4ed7c70f96b99c776995fb64377f0d4ab3b0e1c1";
+const bandProtocolAddr = "0xDA7a001b254CD22e46d3eAB04d937489c93174C3";
 
 const oracle = {
   token: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -22,8 +19,8 @@ export default (
   mockBand?: NamedArtifactContractDeploymentFuture<"LPPriceOracle">
 ) => {
   let priceFeed;
-
-  if (process.env.NETWORK === "localhost" && mockBand) {
+  // TODO: add the correct band address
+  if (mockBand) {
     priceFeed = m.contract(
       "PriceFeed",
       [vineCore, [{ ...oracle, band: mockBand }]],

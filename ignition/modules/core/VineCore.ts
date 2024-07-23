@@ -1,7 +1,14 @@
 import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/types/module-builder";
 
-const OWNER_ADDRESS = "0xe306605c97da3D5daFe9FeF56Cc95133E0Cb235C";
-const GUARDIAN_ADDRESS = "0xe306605c97da3D5daFe9FeF56Cc95133E0Cb235C";
+const OWNER_ADDRESS =
+  process.env.NETWORK === "localhost"
+    ? "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    : process.env.PUBLIC_KEY;
+
+const GUARDIAN_ADDRESS =
+  process.env.NETWORK === "localhost"
+    ? "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    : process.env.PUBLIC_KEY;
 
 export default (m: IgnitionModuleBuilder) => {
   const owner = m.getParameter("owner", OWNER_ADDRESS);

@@ -1,14 +1,19 @@
 {
   "name": "hardhat-project",
   "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@oasisprotocol/sapphire-hardhat": "^2.19.4",
-    "hardhat": "^2.22.4"
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.1",
+    "hardhat": "^2.22.6"
   },
   "scripts": {
     "deploy:testnet": "",
-    "deploy:mainnet": "",
-    "deploy-core:localhost": "NETWORK=localhost npx hardhat ignition deploy ./ignition/modules/Core.ts --network localhost"
+    "deploy:sapphire": "NETWORK=sapphire npx hardhat ignition deploy ./ignition/modules/Core.ts --network sapphire",
+    "deploy:localhost": "NETWORK=localhost npx hardhat ignition deploy ./ignition/modules/Core.ts --network localhost",
+    "init-contracts:localhost": "NETWORK=localhost npx hardhat run ./scripts/initCore.ts --network localhost",
+    "init-contracts:sapphire": "NETWORK=sapphire npx hardhat run ./scripts/initCore.ts --network sapphire"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2"

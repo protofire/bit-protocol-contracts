@@ -7,6 +7,7 @@ export default (
 ) => {
   const interimAdmin = m.contract("InterimAdmin", [vineCore], {
     after: [vineCore],
+    from: process.env.PUBLIC_KEY,
   });
 
   return interimAdmin;

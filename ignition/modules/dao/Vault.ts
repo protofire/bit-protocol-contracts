@@ -1,8 +1,10 @@
 import { NamedArtifactContractDeploymentFuture } from "@nomicfoundation/ignition-core/dist/src/types/module";
 import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/types/module-builder";
 
-// TODO
-const MANAGER_ADDRESS = "0xe306605c97da3D5daFe9FeF56Cc95133E0Cb235C";
+const adminPublicAddress =
+  process.env.NETWORK === "localhost"
+    ? "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    : process.env.PUBLIC_KEY;
 
 export default (
   m: IgnitionModuleBuilder,
@@ -12,7 +14,7 @@ export default (
   voter: NamedArtifactContractDeploymentFuture<"IncentiveVoting">,
   stabilityPool: NamedArtifactContractDeploymentFuture<"StabilityPool">
 ) => {
-  const manager = m.getParameter("manager", MANAGER_ADDRESS);
+  const manager = m.getParameter("manager", adminPublicAddress);
 
   const vault = m.contract(
     "VineVault",

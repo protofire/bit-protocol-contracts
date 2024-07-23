@@ -1,0 +1,21 @@
+{
+  "CoreModule#GasPool": "0xC09DEee6dC56259A02713edc1a2BD0A7a36543e5",
+  "CoreModule#MultiTroveGetter": "0x0f9F8D92144b299a1977AFA2e607F71796905C36",
+  "CoreModule#SortedTroves": "0xbc754b764a8B268c94ddcA27B725d6AE2f5f7015",
+  "CoreModule#VineCore": "0x9644D7eD68F4f7289c1Fc33dD142BE3764f9D5fb",
+  "CoreModule#DebtToken": "0x7eD316A5C7c27ABAdFE5a3FccaB869124b0461c8",
+  "CoreModule#FeeReceiver": "0xC7F70D33E67B09422b4736d4B8515613e9548F7b",
+  "CoreModule#IncentiveVoting": "0xeF18Baffb5068726317bfbF60095AA0c4187Cd5b",
+  "CoreModule#PriceFeed": "0x1a18f6Bc00C669d140333450F69EFC0a14470aC5",
+  "CoreModule#VineToken": "0x803BE8E69B5f7965f1786Ad883786c8116968512",
+  "CoreModule#Factory": "0x51B4828Cf4d1c613efbD23352E9b460fDA2d1bC9",
+  "CoreModule#TokenLocker": "0xcA4652DbBBb8e9546166000EB1BAed2D9C8cF7D4",
+  "CoreModule#BoostCalculator": "0x39d3ddA00CfdA91f172C312c08436F66B6A73E08",
+  "CoreModule#BorrowerOperations": "0x9ea52bd9B2F2058Faa161FC6Ee11C1E5173a4531",
+  "CoreModule#StabilityPool": "0xEcf9d037a887f5D53f4eBBa125c1aE65a854F2D2",
+  "CoreModule#TroveManagerGetters": "0x7BA0d87F3Ac80cECC77C95670835c88ADA4B83B5",
+  "CoreModule#LiquidationManager": "0x84fb5ac83C840417ACDBe58F2041700E9E5d7Ea8",
+  "CoreModule#MultiCollateralHintHelpers": "0x9611Fb41155d5bD28b3d423247BC43D1853501d2",
+  "CoreModule#VineVault": "0xbc3f70C2C8A7D49efAC35037A6C671065c22d5C8",
+  "CoreModule#EmissionSchedule": "0x2A5e90931DF0353a4D811A8b68D38ea0823c9db3"
+}

@@ -80,13 +80,11 @@ export default buildModule("CoreModule", (m) => {
     vault
   );
   const boostCalculator = deployBoostCalculator(m, vineCore, tokenLocker);
-  const interimAdmin = deployInterimAdmin(m, vineCore);
+  // const interimAdmin = deployInterimAdmin(m, vineCore);
 
   const multiCollHintHelpers = deployMultiCollHintHelpers(m, borrowerOps);
   const multiTroveGetter = deployMultiTroveGetter(m);
   const troveManagerGetters = deployTroveManagerGetters(m, factory);
-
-  // TODO: ILLUMINEX POOL/DEPOSIT TOKEN
 
   return { vineCore };
 });
