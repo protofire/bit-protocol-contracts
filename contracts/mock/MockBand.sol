@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract LPPriceOracle is Ownable {
+contract LPPriceOracle {
     uint256 price;
     struct ReferenceData {
         uint256 rate; // base/quote exchange rate, multiplied by 1e18.
@@ -12,7 +12,7 @@ contract LPPriceOracle is Ownable {
         uint256 lastUpdatedQuote; // UNIX epoch of the last time when quote price gets updated.
     }
 
-    constructor(uint256 _price) Ownable(msg.sender) {
+    constructor(uint256 _price) {
         price = _price;
     }
 
@@ -21,13 +21,12 @@ contract LPPriceOracle is Ownable {
     }
 
     /// Returns the price data for the given base/quote pair. Revert if not available.
-    function getReferenceData(string memory, string memory)
-        external
-        view
-        virtual
-        returns (ReferenceData memory data) {
-            data.rate = price;
-            data.lastUpdatedBase = block.timestamp - 1;
-            data.lastUpdatedQuote = block.timestamp - 1;
-        }
+    function getReferenceData(
+        string memory,
+        string memory
+    ) external view virtual returns (ReferenceData memory data) {
+        data.rate = price;
+        data.lastUpdatedBase = block.timestamp - 1;
+        data.lastUpdatedQuote = block.timestamp - 1;
+    }
 }

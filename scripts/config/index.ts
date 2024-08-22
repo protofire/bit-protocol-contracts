@@ -23,6 +23,11 @@ const boostCalculator = `${modulePreffix}BoostCalculator`;
 const vineToken = `${modulePreffix}VineToken`;
 const tokenVesting = `${modulePreffix}TokenVesting`;
 const interimAdmin = `${modulePreffix}InterimAdmin`;
+const lpPriceOracle = `${modulePreffix}LPPriceOracle`;
+const idoTokenVesting = `${modulePreffix}IDOTokenVesting`;
+const multiTroveGetter = `${modulePreffix}MultiTroveGetter`;
+const multiCollateralHintHelpers = `${modulePreffix}MultiCollateralHintHelpers`;
+const troveManagerGetters = `${modulePreffix}TroveManagerGetters`;
 
 const contracts = {
   PriceFeed: {
@@ -78,6 +83,21 @@ const contracts = {
   },
   TokenVesting: {
     address: addresses[tokenVesting],
+  },
+  LPPriceOracle: {
+    address: addresses[lpPriceOracle],
+  },
+  IDOTokenVesting: {
+    address: addresses[idoTokenVesting],
+  },
+  MultiTroveGetter: {
+    address: addresses[multiTroveGetter],
+  },
+  MultiCollateralHintHelpers: {
+    address: addresses[multiCollateralHintHelpers],
+  },
+  TroveManagerGetters: {
+    address: addresses[troveManagerGetters],
   },
   // InterimAdmin: {
   //   address: addresses[interimAdmin],

@@ -10,7 +10,7 @@ export default (
   const minNetDebt = m.getParameter("minNetDebt", 1);
   const gasCompensation = m.getParameter(
     "gasCompensation",
-    "10000000000000000000"
+    "1000000000000000000"
   );
 
   const borrowerOperations = m.contract(

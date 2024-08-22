@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+// import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/IBorrowerOperations.sol";
 import "../interfaces/IDebtToken.sol";
 import "../interfaces/ISortedTroves.sol";
@@ -15,6 +15,7 @@ import "../dependencies/SystemStart.sol";
 import "../dependencies/VineBase.sol";
 import "../dependencies/VineMath.sol";
 import "../dependencies/VineOwnable.sol";
+import "../dependencies/SimpleMath.sol";
 
 /**
     @title Vine Trove Manager
@@ -541,7 +542,7 @@ contract TroveManager is VineBase, VineOwnable, SystemStart {
         uint256 currentActiveDebt = totalActiveDebt;
         (, uint256 interestFactor) = _calculateInterestIndex();
         if (interestFactor > 0) {
-            uint256 activeInterests = Math.mulDiv(
+            uint256 activeInterests = SimpleMath.mulDiv(
                 currentActiveDebt,
                 interestFactor,
                 INTEREST_PRECISION
@@ -614,7 +615,7 @@ contract TroveManager is VineBase, VineOwnable, SystemStart {
         uint256 currentActiveDebt = totalActiveDebt;
         (, uint256 interestFactor) = _calculateInterestIndex();
         if (interestFactor > 0) {
-            uint256 activeInterests = Math.mulDiv(
+            uint256 activeInterests = SimpleMath.mulDiv(
                 currentActiveDebt,
                 interestFactor,
                 INTEREST_PRECISION
@@ -1741,7 +1742,7 @@ contract TroveManager is VineBase, VineOwnable, SystemStart {
         ) = _calculateInterestIndex();
         if (interestFactor > 0) {
             uint256 currentDebt = totalActiveDebt;
-            uint256 activeInterests = Math.mulDiv(
+            uint256 activeInterests = SimpleMath.mulDiv(
                 currentDebt,
                 interestFactor,
                 INTEREST_PRECISION
@@ -1774,7 +1775,7 @@ contract TroveManager is VineBase, VineOwnable, SystemStart {
             interestFactor = deltaT * currentInterest;
             currentInterestIndex =
                 currentInterestIndex +
-                Math.mulDiv(
+                SimpleMath.mulDiv(
                     currentInterestIndex,
                     interestFactor,
                     INTEREST_PRECISION

@@ -1,4 +1,10 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import {
+  wrapEthersSigner,
+  wrapEthersProvider,
+  wrap,
+} from "@oasisprotocol/sapphire-paratime";
+
 import deployVineToken from "./dao/VineToken";
 import deployVineCore from "./core/VineCore";
 import deployFeeReceiver from "./dao/FeeReceiver";
@@ -16,10 +22,12 @@ import deployTroveManager from "./core/TroveManager";
 import deploySortedTroves from "./core/SortedTroves";
 import deployEmissionSchedule from "./dao/EmissionSchedule";
 import deployBoostCalculator from "./dao/BoostCalculator";
-import deployInterimAdmin from "./dao/InterimAdmin";
+// import deployInterimAdmin from "./dao/InterimAdmin";
 import deployMultiCollHintHelpers from "./helpers/MultiCollateralHintHelpers";
 import deployMultiTroveGetter from "./helpers/MultiTroveGetter";
 import deployTroveManagerGetters from "./helpers/TroveManagerGetters";
+import deployIdoTokenVesting from "./dao/IdoTokenVesting";
+import deployTokenVesting from "./dao/TokenVesting";
 
 // Mocks
 import deployMockBand from "./mock/MockBand";
@@ -31,9 +39,9 @@ const NETWORK = process.env.NETWORK;
 export default buildModule("CoreModule", (m) => {
   const vineCore = deployVineCore(m);
 
-  if (NETWORK === "localhost") {
+  if (NETWORK !== "sapphire") {
     deployMockLpChecker(m);
-    deployMockLpToken(m);
+    deployMockLpToken();
     const mockBand = deployMockBand(m);
     deployPriceFeed(m, vineCore, mockBand);
   } else {
@@ -85,6 +93,8 @@ export default buildModule("CoreModule", (m) => {
   const multiCollHintHelpers = deployMultiCollHintHelpers(m, borrowerOps);
   const multiTroveGetter = deployMultiTroveGetter(m);
   const troveManagerGetters = deployTroveManagerGetters(m, factory);
+  const idoTokenVesting = deployIdoTokenVesting(m, vineCore, vault, vineToken);
+  deployTokenVesting(m, vineCore, vault, vineToken);
 
   return { vineCore };
 });

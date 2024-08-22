@@ -7,7 +7,7 @@ export default (
 ) => {
   const gasCompensation = m.getParameter(
     "gasCompensation",
-    "10000000000000000000"
+    "1000000000000000000"
   );
 
   const multiCollateralHintHelpers = m.contract(

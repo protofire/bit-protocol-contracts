@@ -828,48 +828,4 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
         SystemBalances memory balances = fetchBalances();
         (, totalPricedCollateral, totalDebt) = _getTCRData(balances);
     }
-
-    function getZICR(
-        ITroveManager troveManager,
-        address account,
-        uint256 _maxFeePercentage,
-        uint256 _collateralAmount,
-        uint256 _debtAmount
-    ) external returns (uint256) {
-        IERC20 collateralToken;
-        LocalVariables_openTrove memory vars;
-        bool isRecoveryMode;
-        (
-            collateralToken,
-            vars.price,
-            vars.totalPricedCollateral,
-            vars.totalDebt,
-            isRecoveryMode
-        ) = _getCollateralAndTCRData(troveManager);
-
-        _requireValidMaxFeePercentage(_maxFeePercentage);
-
-        vars.netDebt = _debtAmount;
-
-        vars.netDebt =
-            vars.netDebt +
-            _triggerBorrowingFee(
-                troveManager,
-                collateralToken,
-                account,
-                _maxFeePercentage,
-                _debtAmount
-            );
-
-        _requireAtLeastMinNetDebt(vars.netDebt);
-
-        vars.compositeDebt = _getCompositeDebt(vars.netDebt);
-        uint256 icr = VineMath._computeCR(
-            _collateralAmount,
-            vars.compositeDebt,
-            vars.price
-        );
-
-        return icr;
-    }
 }

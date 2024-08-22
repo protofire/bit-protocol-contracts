@@ -9,13 +9,16 @@
     "hardhat": "^2.22.6"
   },
   "scripts": {
-    "deploy:testnet": "",
+    "deploy:testnet": "NETWORK=testnet npx hardhat ignition deploy ./ignition/modules/Core.ts --network sapphire-testnet",
     "deploy:sapphire": "NETWORK=sapphire npx hardhat ignition deploy ./ignition/modules/Core.ts --network sapphire",
     "deploy:localhost": "NETWORK=localhost npx hardhat ignition deploy ./ignition/modules/Core.ts --network localhost",
-    "init-contracts:localhost": "NETWORK=localhost npx hardhat run ./scripts/initCore.ts --network localhost",
-    "init-contracts:sapphire": "NETWORK=sapphire npx hardhat run ./scripts/initCore.ts --network sapphire"
+    "init-contracts:localhost": "NETWORK=localhost npx hardhat run ./scripts/init/initCore.ts --network localhost",
+    "init-contracts:sapphire": "NETWORK=sapphire npx hardhat run ./scripts/init/initCore.ts --network sapphire",
+    "init-contracts:testnet": "NETWORK=testnet npx hardhat run ./scripts/init/initCore.ts --network sapphire-testnet",
+    "deploy-pools:sapphire": "NETWORK=sapphire npx hardhat run ./scripts/deployment/lpPool.ts --network sapphire"
   },
   "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "^1.3.2",
     "@openzeppelin/contracts": "^5.0.2"
   }
 }

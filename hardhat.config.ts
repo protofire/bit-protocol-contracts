@@ -1,9 +1,8 @@
 import "@oasisprotocol/sapphire-hardhat";
+import * as dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-ethers";
 import { HardhatUserConfig } from "hardhat/config";
-
-import * as dotenv from "dotenv";
 
 dotenv.config();
 
@@ -16,14 +15,14 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 1000,
+        runs: 1,
       },
     },
   },
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
-      chainId: 1337, // We set 1337 to make interacting with MetaMask simpler (31337),
+      chainId: 31337,
       // UNCOMMENT TO ENABLE FORKING
       // forking: {
       //   enabled: true,
@@ -45,6 +44,11 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       // TODO: FIND A BETTER SOLUTION FOR MAINNET DEPLOYMENT
       allowUnlimitedContractSize: true,
+    },
+    "sapphire-testnet": {
+      url: "https://testnet.sapphire.oasis.dev/",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 0x5aff,
     },
     "sapphire-localnet": {
       url: "http://localhost:8545",
