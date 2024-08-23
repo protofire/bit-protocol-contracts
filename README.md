@@ -1,1 +1,1 @@
-# Vine Money Deployment Scripts
+# Bit Protocol Contracts
