@@ -1,0 +1,24 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@oasisprotocol/sapphire-hardhat": "^2.19.4",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.1",
+    "hardhat": "^2.22.6"
+  },
+  "scripts": {
+    "deploy:testnet": "NETWORK=testnet npx hardhat ignition deploy ./ignition/modules/Core.ts --network zkbtc-testnet",
+    "deploy:sapphire": "NETWORK=sapphire npx hardhat ignition deploy ./ignition/modules/Core.ts --network sapphire",
+    "deploy:localhost": "NETWORK=localhost npx hardhat ignition deploy ./ignition/modules/Core.ts --network localhost",
+    "init-contracts:localhost": "NETWORK=localhost npx hardhat run ./scripts/init/initCore.ts --network localhost",
+    "init-contracts:sapphire": "NETWORK=sapphire npx hardhat run ./scripts/init/initCore.ts --network sapphire",
+    "init-contracts:testnet": "NETWORK=testnet npx hardhat run ./scripts/init/initCore.ts --network zkbtc-testnet",
+    "deploy-pools:sapphire": "NETWORK=sapphire npx hardhat run ./scripts/deployment/lpPool.ts --network sapphire"
+  },
+  "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "^1.3.2",
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
