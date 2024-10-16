@@ -3,10 +3,10 @@ import { NamedArtifactContractDeploymentFuture } from "@nomicfoundation/ignition
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">
 ) => {
-  const feeReceiver = m.contract("FeeReceiver", [vineCore], {
-    after: [vineCore],
+  const feeReceiver = m.contract("FeeReceiver", [bitCore], {
+    after: [bitCore],
   });
 
   return feeReceiver;

@@ -2,27 +2,29 @@
 
 pragma solidity ^0.8.19;
 
-import "../dependencies/VineOwnable.sol";
+import "../dependencies/BitOwnable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract IDOTokenVesting is VineOwnable {
+contract IDOTokenVesting is BitOwnable {
     address public immutable vault;
-    IERC20 public immutable VINE;
+    IERC20 public immutable bit;
 
     mapping(address => UnlockingRules) public UnlockingInfo;
     uint256 public duration;
     uint256 public unlockingStartTime;
 
     event Vest(address indexed _addr, address t0, uint256 _amount);
-    event ClaimAirdrop(
-        address indexed _addr,
-        uint256 _amount
-    );
+    event ClaimAirdrop(address indexed _addr, uint256 _amount);
 
-
-    constructor(address _vineCore, address _vault, IERC20 _VINE, uint256 _unlockingStartTime, uint256 _duration) VineOwnable(_vineCore) {
+    constructor(
+        address _bitCore,
+        address _vault,
+        IERC20 _bit,
+        uint256 _unlockingStartTime,
+        uint256 _duration
+    ) BitOwnable(_bitCore) {
         vault = _vault;
-        VINE = _VINE;
+        bit = _bit;
         unlockingStartTime = _unlockingStartTime;
         duration = _duration;
     }
@@ -73,7 +75,7 @@ contract IDOTokenVesting is VineOwnable {
             block.timestamp >= unlockingStartTime,
             "The unlocking time has not arrived yet."
         );
-        
+
         uint256 unlockableAmount = getUnlockableAmount(msg.sender);
 
         if (unlockableAmount > 0) {
@@ -83,7 +85,7 @@ contract IDOTokenVesting is VineOwnable {
             } else {
                 UnlockingInfo[msg.sender].lastUnlockingTime = block.timestamp;
             }
-            VINE.transferFrom(vault, to, unlockableAmount);
+            bit.transferFrom(vault, to, unlockableAmount);
             emit Vest(msg.sender, to, unlockableAmount);
         }
     }
@@ -99,7 +101,7 @@ contract IDOTokenVesting is VineOwnable {
         );
         uint256 amount = UnlockingInfo[msg.sender].airdrop;
         require(amount > 0, "You are not eligible for the airdrop.");
-        VINE.transferFrom(vault, msg.sender, amount);
+        bit.transferFrom(vault, msg.sender, amount);
         UnlockingInfo[msg.sender].isClaimed = true;
         emit ClaimAirdrop(msg.sender, amount);
     }

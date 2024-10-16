@@ -19,9 +19,12 @@ interface IPriceFeed {
         uint32 _heartbeat
     ) external;
 
-    function MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND() external view returns (uint256);
+    function MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND()
+        external
+        view
+        returns (uint256);
 
-    function VINE_CORE() external view returns (address);
+    function bit_CORE() external view returns (address);
 
     function RESPONSE_TIMEOUT() external view returns (uint256);
 
@@ -44,5 +47,8 @@ interface IPriceFeed {
 
     function priceRecords(
         address
-    ) external view returns (uint96 price, uint32 timestamp, uint32 lastUpdated);
+    )
+        external
+        view
+        returns (uint96 price, uint32 timestamp, uint32 lastUpdated);
 }

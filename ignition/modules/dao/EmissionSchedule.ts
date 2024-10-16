@@ -3,9 +3,9 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   voter: NamedArtifactContractDeploymentFuture<"IncentiveVoting">,
-  vault: NamedArtifactContractDeploymentFuture<"VineVault">
+  vault: NamedArtifactContractDeploymentFuture<"BitVault">
 ) => {
   const initialLockWeeks = m.getParameter("initialLockWeeks", 19);
   const lockDecayWeeks = m.getParameter("lockDecayWeeks", 2);
@@ -19,7 +19,7 @@ export default (
   const emissionSchedule = m.contract(
     "EmissionSchedule",
     [
-      vineCore,
+      bitCore,
       voter,
       vault,
       initialLockWeeks,
@@ -27,7 +27,7 @@ export default (
       weeklyPct,
       scheduledWeeklyPct,
     ],
-    { after: [vineCore, voter, vault] }
+    { after: [bitCore, voter, vault] }
   );
 
   return emissionSchedule;

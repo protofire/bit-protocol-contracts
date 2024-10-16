@@ -22,7 +22,7 @@ const main = async () => {
 
     const signature = await deployer.signTypedData(
       {
-        name: "VineSignature.SignIn",
+        name: "BitSignature.SignIn",
         version: "1",
         chainId: 23295,
         verifyingContract: "0x94Bd7bFDCAe6Cc36455d8bf2FF9238BB1162E507",

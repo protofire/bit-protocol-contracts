@@ -3,7 +3,7 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   debtToken: NamedArtifactContractDeploymentFuture<"DebtToken">,
   factory: NamedArtifactContractDeploymentFuture<"Factory">
 ) => {
@@ -15,8 +15,8 @@ export default (
 
   const borrowerOperations = m.contract(
     "BorrowerOperations",
-    [vineCore, debtToken, factory, minNetDebt, gasCompensation],
-    { after: [vineCore, debtToken, factory] }
+    [bitCore, debtToken, factory, minNetDebt, gasCompensation],
+    { after: [bitCore, debtToken, factory] }
   );
 
   return borrowerOperations;

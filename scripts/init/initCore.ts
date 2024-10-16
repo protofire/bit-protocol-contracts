@@ -14,8 +14,8 @@ async function main() {
   const signer = await hre.ethers.getSigner(adminWallet.address);
 
   const core = await hre.ethers.getContractAt(
-    "VineCore",
-    contracts["VineCore"].address,
+    "BitCore",
+    contracts["BitCore"].address,
     signer
   );
 
@@ -43,15 +43,15 @@ async function main() {
     signer
   );
 
-  const vineVault = await hre.ethers.getContractAt(
-    "VineVault",
-    contracts["VineVault"].address,
+  const bitVault = await hre.ethers.getContractAt(
+    "BitVault",
+    contracts["BitVault"].address,
     signer
   );
 
-  const vineToken = await hre.ethers.getContractAt(
-    "VineToken",
-    contracts["VineToken"].address,
+  const bitToken = await hre.ethers.getContractAt(
+    "BitToken",
+    contracts["BitToken"].address,
     signer
   );
 
@@ -75,9 +75,9 @@ async function main() {
   await core.setFeeReceiver(contracts["FeeReceiver"].address);
   await core.setPriceFeed(contracts["PriceFeed"].address);
 
-  // VineToken config
-  await vineToken.setInitialParameters(
-    contracts["VineVault"].address,
+  // BitToken config
+  await bitToken.setInitialParameters(
+    contracts["BitVault"].address,
     contracts["TokenLocker"].address
   );
 
@@ -127,6 +127,10 @@ async function main() {
     signer
   );
 
+  console.log("Trove Manager deployed at:", troveManagerDeployment);
+
+  // set price feed (trove Manager)
+
   const sortedTrove = await troveManager.sortedTroves();
 
   // TROVE MANAGER/Debt Token SET LOOKERS
@@ -145,47 +149,52 @@ async function main() {
 
   // StabilityPool config
   await stabilityPool.setInitialParameters(
-    contracts["VineVault"].address,
+    contracts["BitVault"].address,
     contracts["LiquidationManager"].address
   );
 
   // INCENTIVE VOTING CONFIG
   await incentiveVoting.setInitialParameters(
     contracts["TokenLocker"].address,
-    contracts["VineVault"].address
+    contracts["BitVault"].address
   );
 
-  // VineVault config
-  await vineVault.setInitialParameters(
-    contracts["EmissionSchedule"].address,
-    contracts["BoostCalculator"].address,
-    "100000000000000000000000000",
-    "19",
-    [],
-    [
-      {
-        receiver: adminWallet.address,
-        amount: "1700000000000000000000000",
-      },
-      {
-        receiver: contracts["IDOTokenVesting"].address,
-        amount: "5300000000000000000000000",
-      },
-      {
-        receiver: contracts["TokenVesting"].address,
-        amount: "38000000000000000000000000",
-      },
-    ]
-  );
+  // BitVault config
+  // await bitVault.setInitialParameters(
+  //   contracts["EmissionSchedule"].address,
+  //   contracts["BoostCalculator"].address,
+  //   "100000000000000000000000000",
+  //   "19",
+  //   [],
+  //   [
+  //     {
+  //       receiver: adminWallet.address,
+  //       amount: "1700000000000000000000000",
+  //     },
+  //     {
+  //       receiver: contracts["IDOTokenVesting"].address,
+  //       amount: "5300000000000000000000000",
+  //     },
+  //     {
+  //       receiver: contracts["TokenVesting"].address,
+  //       amount: "38000000000000000000000000",
+  //     },
+  //   ]
+  // );
 
-  await vineToken.transferFrom(
-    contracts["VineVault"].address,
-    adminWallet.address,
-    "1510000000000000000000000"
-  );
+  // await bitToken.transferFrom(
+  //   contracts["BitVault"].address,
+  //   adminWallet.address,
+  //   "1510000000000000000000000"
+  // );
+
+  // REGISTER EMISSIONS RECEIVERS
+  // await bitVault.registerReceiver(troveManagerDeployment, 2);
+  // MISSING POOLS
+  // await bitVault.registerReceiver(contracts["StabilityPool"].address, 3);
 
   // TOKEN LOCKER CONFIG
-  await tokenLocker.setPenaltyWithdrawalsEnabled(true);
+  // await tokenLocker.setPenaltyWithdrawalsEnabled(true);
   // 7 days
   // await tokenLocker.setAllowPenaltyWithdrawAfter(0);
 }

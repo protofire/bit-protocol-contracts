@@ -3,15 +3,15 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   debtToken: NamedArtifactContractDeploymentFuture<"DebtToken">,
   factory: NamedArtifactContractDeploymentFuture<"Factory">
 ) => {
   const stabilityPool = m.contract(
     "StabilityPool",
-    [vineCore, debtToken, factory],
+    [bitCore, debtToken, factory],
     {
-      after: [vineCore, debtToken, factory],
+      after: [bitCore, debtToken, factory],
     }
   );
 

@@ -5,8 +5,8 @@ import {
   wrap,
 } from "@oasisprotocol/sapphire-paratime";
 
-import deployVineToken from "./dao/VineToken";
-import deployVineCore from "./core/VineCore";
+import deployBitToken from "./dao/BitToken";
+import deployBitCore from "./core/BitCore";
 import deployFeeReceiver from "./dao/FeeReceiver";
 import deployPriceFeed from "./core/PriceFeed";
 import deployGasPool from "./core/GasPool";
@@ -28,52 +28,49 @@ import deployMultiTroveGetter from "./helpers/MultiTroveGetter";
 import deployTroveManagerGetters from "./helpers/TroveManagerGetters";
 import deployIdoTokenVesting from "./dao/IdoTokenVesting";
 import deployTokenVesting from "./dao/TokenVesting";
+// import deployLuminexFactory from "./mock/LuminexFactory";
 
 // Mocks
 import deployMockBand from "./mock/MockBand";
-import deployMockLpChecker from "./mock/MockLpChecker";
-import deployMockLpToken from "./mock/MockLpToken";
+// import deployMockLpChecker from "./mock/MockLpChecker";
+// import deployMockLpToken from "./mock/MockLpToken";
 
 const NETWORK = process.env.NETWORK;
 
 export default buildModule("CoreModule", (m) => {
-  const vineCore = deployVineCore(m);
+  const bitCore = deployBitCore(m);
 
   if (NETWORK !== "sapphire") {
-    deployMockLpChecker(m);
-    deployMockLpToken();
+    // deployMockLpChecker(m);
+    // deployMockLpToken();
+    // deployLuminexFactory(m);
     const mockBand = deployMockBand(m);
-    deployPriceFeed(m, vineCore, mockBand);
+    deployPriceFeed(m, bitCore, mockBand);
   } else {
-    deployPriceFeed(m, vineCore);
+    deployPriceFeed(m, bitCore);
   }
 
-  const vineToken = deployVineToken(m, vineCore);
-  const feeReceiver = deployFeeReceiver(m, vineCore);
+  const bitToken = deployBitToken(m, bitCore);
+  const feeReceiver = deployFeeReceiver(m, bitCore);
   const gasPool = deployGasPool(m);
-  const debtToken = deployDebtToken(m, vineCore);
-  const factory = deployFactory(m, vineCore, debtToken);
-  const stabilityPool = deployStabilityPool(m, vineCore, debtToken, factory);
-  const borrowerOps = deployBorrowerOps(m, vineCore, debtToken, factory);
+  const debtToken = deployDebtToken(m, bitCore);
+  const factory = deployFactory(m, bitCore, debtToken);
+  const stabilityPool = deployStabilityPool(m, bitCore, debtToken, factory);
+  const borrowerOps = deployBorrowerOps(m, bitCore, debtToken, factory);
   const liqManager = deployLiqManager(m, stabilityPool, borrowerOps, factory);
-  const incentiveVoting = deployIncentiveVoting(m, vineCore);
-  const tokenLocker = deployTokenLocker(
-    m,
-    vineCore,
-    vineToken,
-    incentiveVoting
-  );
+  const incentiveVoting = deployIncentiveVoting(m, bitCore);
+  const tokenLocker = deployTokenLocker(m, bitCore, bitToken, incentiveVoting);
   const vault = deployVault(
     m,
-    vineCore,
-    vineToken,
+    bitCore,
+    bitToken,
     tokenLocker,
     incentiveVoting,
     stabilityPool
   );
   const troveManager = deployTroveManager(
     m,
-    vineCore,
+    bitCore,
     gasPool,
     debtToken,
     borrowerOps,
@@ -83,18 +80,18 @@ export default buildModule("CoreModule", (m) => {
   const sortedTroves = deploySortedTroves(m);
   const emissionSchedule = deployEmissionSchedule(
     m,
-    vineCore,
+    bitCore,
     incentiveVoting,
     vault
   );
-  const boostCalculator = deployBoostCalculator(m, vineCore, tokenLocker);
-  // const interimAdmin = deployInterimAdmin(m, vineCore);
+  const boostCalculator = deployBoostCalculator(m, bitCore, tokenLocker);
+  // const interimAdmin = deployInterimAdmin(m, bitCore);
 
   const multiCollHintHelpers = deployMultiCollHintHelpers(m, borrowerOps);
   const multiTroveGetter = deployMultiTroveGetter(m);
   const troveManagerGetters = deployTroveManagerGetters(m, factory);
-  const idoTokenVesting = deployIdoTokenVesting(m, vineCore, vault, vineToken);
-  deployTokenVesting(m, vineCore, vault, vineToken);
+  const idoTokenVesting = deployIdoTokenVesting(m, bitCore, vault, bitToken);
+  deployTokenVesting(m, bitCore, vault, bitToken);
 
-  return { vineCore };
+  return { bitCore };
 });

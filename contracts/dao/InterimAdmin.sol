@@ -3,12 +3,12 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/utils/Address.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IVineCore.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import "../interfaces/IBitCore.sol";
 
 /**
-    @title Vine DAO Interim Admin
-    @notice Temporary ownership contract for all Vine contracts during bootstrap phase. Allows executing
+    @title Bit DAO Interim Admin
+    @notice Temporary ownership contract for all Bit contracts during bootstrap phase. Allows executing
             arbitrary function calls by the deployer following a minimum time before execution.
             The protocol guardian can cancel any proposals and cannot be replaced.
             To avoid a malicious flood attack the number of daily proposals is capped.
@@ -35,15 +35,15 @@ contract InterimAdmin is Ownable {
     uint256 public constant MAX_TIME_TO_EXECUTION = 3 weeks;
     uint256 public constant MAX_DAILY_PROPOSALS = 3;
 
-    IVineCore public immutable vineCore;
+    IBitCore public immutable bitCore;
     address public adminVoting;
 
     Proposal[] proposalData;
     mapping(uint256 => Action[]) proposalPayloads;
     mapping(uint256 => uint256) dailyProposalsCount;
 
-    constructor(address _vineCore) Ownable(msg.sender) {
-        vineCore = IVineCore(_vineCore);
+    constructor(address _bitCore) Ownable(msg.sender) {
+        bitCore = IBitCore(_bitCore);
     }
 
     function setAdminVoting(address _adminVoting) external onlyOwner {
@@ -66,7 +66,13 @@ contract InterimAdmin is Ownable {
     )
         external
         view
-        returns (uint256 createdAt, uint256 canExecuteAfter, bool executed, bool canExecute, Action[] memory payload)
+        returns (
+            uint256 createdAt,
+            uint256 canExecuteAfter,
+            bool executed,
+            bool canExecute,
+            Action[] memory payload
+        )
     {
         Proposal memory proposal = proposalData[id];
         payload = proposalPayloads[id];
@@ -74,7 +80,13 @@ contract InterimAdmin is Ownable {
             proposal.canExecuteAfter < block.timestamp &&
             proposal.canExecuteAfter + MAX_TIME_TO_EXECUTION > block.timestamp);
 
-        return (proposal.createdAt, proposal.canExecuteAfter, proposal.processed, canExecute, payload);
+        return (
+            proposal.createdAt,
+            proposal.canExecuteAfter,
+            proposal.processed,
+            canExecute,
+            payload
+        );
     }
 
     /**
@@ -89,14 +101,19 @@ contract InterimAdmin is Ownable {
         require(currentDailyCount < MAX_DAILY_PROPOSALS, "MAX_DAILY_PROPOSALS");
         uint loopEnd = payload.length;
         for (uint256 i; i < loopEnd; i++) {
-            require(!_isSetGuardianPayload(payload[i]), "Cannot change guardian");
+            require(
+                !_isSetGuardianPayload(payload[i]),
+                "Cannot change guardian"
+            );
         }
         dailyProposalsCount[day] = currentDailyCount + 1;
         uint256 idx = proposalData.length;
         proposalData.push(
             Proposal({
                 createdAt: uint32(block.timestamp),
-                canExecuteAfter: uint32(block.timestamp + MIN_TIME_TO_EXECUTION),
+                canExecuteAfter: uint32(
+                    block.timestamp + MIN_TIME_TO_EXECUTION
+                ),
                 processed: false
             })
         );
@@ -115,7 +132,10 @@ contract InterimAdmin is Ownable {
         @param id Proposal ID
      */
     function cancelProposal(uint256 id) external {
-        require(msg.sender == owner() || msg.sender == vineCore.guardian(), "Unauthorized");
+        require(
+            msg.sender == owner() || msg.sender == bitCore.guardian(),
+            "Unauthorized"
+        );
         require(id < proposalData.length, "Invalid ID");
         proposalData[id].processed = true;
         emit ProposalCancelled(id);
@@ -134,7 +154,10 @@ contract InterimAdmin is Ownable {
 
         uint256 executeAfter = proposal.canExecuteAfter;
         require(executeAfter < block.timestamp, "MIN_TIME_TO_EXECUTION");
-        require(executeAfter + MAX_TIME_TO_EXECUTION > block.timestamp, "MAX_TIME_TO_EXECUTION");
+        require(
+            executeAfter + MAX_TIME_TO_EXECUTION > block.timestamp,
+            "MAX_TIME_TO_EXECUTION"
+        );
 
         proposalData[id].processed = true;
 
@@ -148,28 +171,33 @@ contract InterimAdmin is Ownable {
     }
 
     /**
-        @dev Allow accepting ownership transfer of `VineCore`
+        @dev Allow accepting ownership transfer of `BitCore`
      */
     function acceptTransferOwnership() external onlyOwner {
-        vineCore.acceptTransferOwnership();
+        bitCore.acceptTransferOwnership();
     }
 
     /**
-        @dev Restricted method to transfer ownership of `VineCore`
+        @dev Restricted method to transfer ownership of `BitCore`
              to the actual Admin voting contract
      */
     function transferOwnershipToAdminVoting() external {
-        require(msg.sender == owner() || msg.sender == vineCore.guardian(), "Unauthorized");
-        vineCore.commitTransferOwnership(adminVoting);
+        require(
+            msg.sender == owner() || msg.sender == bitCore.guardian(),
+            "Unauthorized"
+        );
+        bitCore.commitTransferOwnership(adminVoting);
     }
 
-    function _isSetGuardianPayload(Action memory action) internal pure returns (bool) {
+    function _isSetGuardianPayload(
+        Action memory action
+    ) internal pure returns (bool) {
         bytes memory data = action.data;
         // Extract the call sig from payload data
         bytes4 sig;
         assembly {
             sig := mload(add(data, 0x20))
         }
-        return sig == IVineCore.setGuardian.selector;
+        return sig == IBitCore.setGuardian.selector;
     }
 }

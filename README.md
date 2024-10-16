@@ -1,1 +1,1 @@
-# Vine Money Deployment Scripts
+# Bit Money Deployment Scripts

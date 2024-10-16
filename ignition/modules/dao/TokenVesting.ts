@@ -3,14 +3,14 @@ import { NamedArtifactContractDeploymentFuture } from "@nomicfoundation/ignition
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
-  vineVault: NamedArtifactContractDeploymentFuture<"VineVault">,
-  vineToken: NamedArtifactContractDeploymentFuture<"VineToken">
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
+  bitVault: NamedArtifactContractDeploymentFuture<"BitVault">,
+  bitToken: NamedArtifactContractDeploymentFuture<"BitToken">
 ) => {
   const tokenVesting = m.contract(
     "TokenVesting",
-    [vineCore, vineVault, vineToken],
-    { after: [vineCore, vineVault, vineToken] }
+    [bitCore, bitVault, bitToken],
+    { after: [bitCore, bitVault, bitToken] }
   );
 
   return tokenVesting;

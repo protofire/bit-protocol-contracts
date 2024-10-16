@@ -3,10 +3,10 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">
 ) => {
-  const incentiveVoting = m.contract("IncentiveVoting", [vineCore], {
-    after: [vineCore],
+  const incentiveVoting = m.contract("IncentiveVoting", [bitCore], {
+    after: [bitCore],
   });
 
   return incentiveVoting;

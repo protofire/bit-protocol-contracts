@@ -5,8 +5,8 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
-import "./VineSignature.sol";
-import "./VineOwnable.sol";
+import "./BitSignature.sol";
+import "./BitOwnable.sol";
 
 interface IERC20Metadata {
     /**
@@ -44,10 +44,17 @@ interface IERC20Metadata {
  * applications.
  *
  */
-abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature, VineOwnable {
+abstract contract ERC20 is
+    Context,
+    IERC20Metadata,
+    IERC20Errors,
+    BitSignature,
+    BitOwnable
+{
     mapping(address account => uint256) private _balances;
 
-    mapping(address account => mapping(address spender => uint256)) private _allowances;
+    mapping(address account => mapping(address spender => uint256))
+        private _allowances;
 
     mapping(address => bool) public lookers;
 
@@ -64,7 +71,11 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor(address _vineCore, string memory name_, string memory symbol_) VineOwnable(_vineCore) {
+    constructor(
+        address _bitCore,
+        string memory name_,
+        string memory symbol_
+    ) BitOwnable(_bitCore) {
         _name = name_;
         _symbol = symbol_;
     }
@@ -108,9 +119,12 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
         return _totalSupply;
     }
 
-    function setLookers(address[] memory _lookers, bool[] memory _bools) external onlyOwner {
+    function setLookers(
+        address[] memory _lookers,
+        bool[] memory _bools
+    ) external onlyOwner {
         require(_lookers.length == _bools.length);
-        for(uint8 i = 0; i < _lookers.length; i++) {
+        for (uint8 i = 0; i < _lookers.length; i++) {
             lookers[_lookers[i]] = _bools[i];
         }
     }
@@ -122,14 +136,16 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account)  public view virtual returns (uint256) {
-        if(secrecy) {
+    function balanceOf(address account) public view virtual returns (uint256) {
+        if (secrecy) {
             require(lookers[msg.sender] || account == msg.sender, "NA");
         }
         return _balances[account];
     }
 
-    function checkBalanceOf(SignIn calldata auth) authenticated(auth) external view returns (uint256) {
+    function checkBalanceOf(
+        SignIn calldata auth
+    ) external view authenticated(auth) returns (uint256) {
         return _balances[auth.user];
     }
 
@@ -150,7 +166,10 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual returns (uint256) {
+    function allowance(
+        address owner,
+        address spender
+    ) public view virtual returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -164,7 +183,10 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 value) public virtual returns (bool) {
+    function approve(
+        address spender,
+        uint256 value
+    ) public virtual returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, value);
         return true;
@@ -186,7 +208,11 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      */
-    function transferFrom(address from, address to, uint256 value) public virtual returns (bool) {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) public virtual returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, value);
         _transfer(from, to, value);
@@ -314,7 +340,12 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
      *
      * Requirements are the same as {_approve}.
      */
-    function _approve(address owner, address spender, uint256 value, bool) internal virtual {
+    function _approve(
+        address owner,
+        address spender,
+        uint256 value,
+        bool
+    ) internal virtual {
         if (owner == address(0)) {
             revert ERC20InvalidApprover(address(0));
         }
@@ -332,11 +363,19 @@ abstract contract ERC20 is Context, IERC20Metadata, IERC20Errors, VineSignature,
      *
      * Does not emit an {Approval} event.
      */
-    function _spendAllowance(address owner, address spender, uint256 value) internal virtual {
+    function _spendAllowance(
+        address owner,
+        address spender,
+        uint256 value
+    ) internal virtual {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             if (currentAllowance < value) {
-                revert ERC20InsufficientAllowance(spender, currentAllowance, value);
+                revert ERC20InsufficientAllowance(
+                    spender,
+                    currentAllowance,
+                    value
+                );
             }
             unchecked {
                 _approve(owner, spender, currentAllowance - value, false);

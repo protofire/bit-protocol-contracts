@@ -3,12 +3,12 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vault: NamedArtifactContractDeploymentFuture<"VineVault">,
+  vault: NamedArtifactContractDeploymentFuture<"BitVault">,
   trove: NamedArtifactContractDeploymentFuture<"TroveManager">,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">
 ) => {
-  const depositToken = m.contract("DepositToken", [vault, trove, vineCore], {
-    after: [vault, trove, vineCore],
+  const depositToken = m.contract("DepositToken", [vault, trove, bitCore], {
+    after: [vault, trove, bitCore],
   });
 
   return depositToken;

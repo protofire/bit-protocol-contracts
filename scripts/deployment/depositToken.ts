@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 
 const { contracts } = require("../config/index.ts");
 
-const lpToken = "0x2BCD9a9Cc2a49E00cB58b9EE3855dF5bC80dfFee";
+const lpToken = "0xA84d4f19B19427745C7f4656EB05Dd14FDBDAA75";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -12,10 +12,10 @@ async function main() {
     deployer
   );
   const contract = await depositToken.deploy(
-    contracts["VineToken"].address,
+    contracts["BitToken"].address,
     lpToken,
-    contracts["VineVault"].address,
-    contracts["VineCore"].address
+    contracts["BitVault"].address,
+    contracts["BitCore"].address
   );
   await contract.waitForDeployment();
 

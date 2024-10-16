@@ -6,20 +6,20 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/ITroveManager.sol";
 import "../interfaces/IDebtToken.sol";
-import "../dependencies/VineBase.sol";
-import "../dependencies/VineMath.sol";
-import "../dependencies/VineOwnable.sol";
+import "../dependencies/BitBase.sol";
+import "../dependencies/BitMath.sol";
+import "../dependencies/BitOwnable.sol";
 import "../dependencies/DelegatedOps.sol";
 
 /**
-    @title Vine Borrower Operations
+    @title Bit Borrower Operations
     @notice Based on Liquity's `BorrowerOperations`
             https://github.com/liquity/dev/blob/main/packages/contracts/contracts/BorrowerOperations.sol
 
-            Vine's implementation is modified to support multiple collaterals. There is a 1:n
+            Bit's implementation is modified to support multiple collaterals. There is a 1:n
             relationship between `BorrowerOperations` and each `TroveManager` / `SortedTroves` pair.
  */
-contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
+contract BorrowerOperations is BitBase, BitOwnable, DelegatedOps {
     using SafeERC20 for IERC20;
 
     IDebtToken public immutable debtToken;
@@ -88,12 +88,12 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
     event TroveManagerRemoved(ITroveManager troveManager);
 
     constructor(
-        address _vineCore,
+        address _bitCore,
         address _debtTokenAddress,
         address _factory,
         uint256 _minNetDebt,
         uint256 _gasCompensation
-    ) VineOwnable(_vineCore) VineBase(_gasCompensation) {
+    ) BitOwnable(_bitCore) BitBase(_gasCompensation) {
         debtToken = IDebtToken(_debtTokenAddress);
         factory = _factory;
         _setMinNetDebt(_minNetDebt);
@@ -205,7 +205,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
         address _upperHint,
         address _lowerHint
     ) external payable callerOrDelegated(account) {
-        require(!VINE_CORE.paused(), "Deposits are paused");
+        require(!bit_CORE.paused(), "Deposits are paused");
         IERC20 collateralToken;
         LocalVariables_openTrove memory vars;
         bool isRecoveryMode;
@@ -236,12 +236,12 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
 
         // ICR is based on the composite debt, i.e. the requested Debt amount + Debt borrowing fee + Debt gas comp.
         vars.compositeDebt = _getCompositeDebt(vars.netDebt);
-        vars.ICR = VineMath._computeCR(
+        vars.ICR = BitMath._computeCR(
             _collateralAmount,
             vars.compositeDebt,
             vars.price
         );
-        vars.NICR = VineMath._computeNominalCR(
+        vars.NICR = BitMath._computeNominalCR(
             _collateralAmount,
             vars.compositeDebt
         );
@@ -295,7 +295,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
         address _upperHint,
         address _lowerHint
     ) external payable callerOrDelegated(account) {
-        require(!VINE_CORE.paused(), "Trove adjustments are paused");
+        require(!bit_CORE.paused(), "Trove adjustments are paused");
         if (troveManagersData[troveManager].collateralToken == IERC20(ROSE)) {
             require(msg.value == _collateralAmount, "NE");
         }
@@ -342,7 +342,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
         address _upperHint,
         address _lowerHint
     ) external callerOrDelegated(account) {
-        require(!VINE_CORE.paused(), "Withdrawals are paused");
+        require(!bit_CORE.paused(), "Withdrawals are paused");
         _adjustTrove(
             troveManager,
             account,
@@ -389,7 +389,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
         address _lowerHint
     ) external payable callerOrDelegated(account) {
         require(
-            (_collDeposit == 0 && !_isDebtIncrease) || !VINE_CORE.paused(),
+            (_collDeposit == 0 && !_isDebtIncrease) || !bit_CORE.paused(),
             "Trove adjustments are paused"
         );
         require(
@@ -572,7 +572,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
 
         _requireUserAcceptsFee(debtFee, _debtAmount, _maxFeePercentage);
 
-        debtToken.mint(VINE_CORE.feeReceiver(), debtFee);
+        debtToken.mint(bit_CORE.feeReceiver(), debtFee);
 
         emit BorrowingFeePaid(_caller, collateralToken, debtFee);
 
@@ -614,7 +614,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
          */
 
         // Get the trove's old ICR before the adjustment
-        uint256 oldICR = VineMath._computeCR(
+        uint256 oldICR = BitMath._computeCR(
             _vars.coll,
             _vars.debt,
             _vars.price
@@ -721,7 +721,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
             _isDebtIncrease
         );
 
-        uint256 newICR = VineMath._computeCR(newColl, newDebt, _price);
+        uint256 newICR = BitMath._computeCR(newColl, newDebt, _price);
         return newICR;
     }
 
@@ -757,7 +757,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
             ? totalColl + _collChange
             : totalColl - _collChange;
 
-        uint256 newTCR = VineMath._computeCR(totalColl, totalDebt);
+        uint256 newTCR = BitMath._computeCR(totalColl, totalDebt);
         return newTCR;
     }
 
@@ -781,7 +781,7 @@ contract BorrowerOperations is VineBase, VineOwnable, DelegatedOps {
                 ++i;
             }
         }
-        amount = VineMath._computeCR(totalPricedCollateral, totalDebt);
+        amount = BitMath._computeCR(totalPricedCollateral, totalDebt);
 
         return (amount, totalPricedCollateral, totalDebt);
     }

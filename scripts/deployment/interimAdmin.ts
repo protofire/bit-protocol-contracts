@@ -9,7 +9,7 @@ async function main() {
     "InterimAdmin",
     deployer
   );
-  const contract = await interimAdmin.deploy(contracts["VineCore"].address);
+  const contract = await interimAdmin.deploy(contracts["BitCore"].address);
   await contract.waitForDeployment();
 
   console.log("InterimAdmin deployed to:", await contract.getAddress());

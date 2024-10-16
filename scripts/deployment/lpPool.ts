@@ -21,30 +21,30 @@ async function main() {
   );
 
   // DEPLOY ILLUMINEX POOLS
-  const txVineRoseLP = await illuminexFactory.createPair(
+  const txBitRoseLP = await illuminexFactory.createPair(
     wRose,
-    contracts["VineToken"].address
+    contracts["BitToken"].address
   );
-  const txVusdEthUSDCLP = await illuminexFactory.createPair(
+  const txBitUSDEthUSDCLP = await illuminexFactory.createPair(
     contracts["DebtToken"].address,
     ethUSDC
   );
 
-  await txVineRoseLP.wait();
-  await txVusdEthUSDCLP.wait();
+  await txBitRoseLP.wait();
+  await txBitUSDEthUSDCLP.wait();
 
-  const vineRoseLP = await illuminexFactory.getPair(
+  const bitRoseLP = await illuminexFactory.getPair(
     wRose,
-    contracts["VineToken"].address
+    contracts["BitToken"].address
   );
-  const vusdEthUSDCLP = await illuminexFactory.getPair(
+  const bitusdEthUSDCLP = await illuminexFactory.getPair(
     contracts["DebtToken"].address,
     ethUSDC
   );
 
   console.log({
-    vineRoseLP,
-    vusdEthUSDCLP,
+    bitRoseLP,
+    bitusdEthUSDCLP,
   });
 }
 

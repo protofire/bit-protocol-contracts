@@ -4,21 +4,21 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../dependencies/VineOwnable.sol";
+import "../dependencies/BitOwnable.sol";
 import "../dependencies/SystemStart.sol";
-import "../dependencies/VineMath.sol";
+import "../dependencies/BitMath.sol";
 import "../interfaces/IDebtToken.sol";
 import "../interfaces/IVault.sol";
 
 /**
-    @title Vine Stability Pool
+    @title Bit Stability Pool
     @notice Based on Liquity's `StabilityPool`
             https://github.com/liquity/dev/blob/main/packages/contracts/contracts/StabilityPool.sol
 
-            Vine's implementation is modified to support multiple collaterals. Deposits into
+            Bit's implementation is modified to support multiple collaterals. Deposits into
             the stability pool may be used to liquidate any supported collateral type.
  */
-contract StabilityPool is VineOwnable, SystemStart {
+contract StabilityPool is BitOwnable, SystemStart {
     using SafeERC20 for IERC20;
 
     uint256 public constant DECIMAL_PRECISION = 1e18;
@@ -28,7 +28,7 @@ contract StabilityPool is VineOwnable, SystemStart {
     uint256 public constant emissionId = 0;
 
     IDebtToken public immutable debtToken;
-    IVineVault public vault;
+    IBitVault public vault;
     address public immutable factory;
     address public liquidationManager;
 
@@ -48,7 +48,8 @@ contract StabilityPool is VineOwnable, SystemStart {
     // index values are mapped against the values within `collateralTokens`
     mapping(address => uint256[256]) public depositSums; // depositor address -> sums
 
-    mapping(address depositor => uint80[256] gains) public collateralGainsByDepositor;
+    mapping(address depositor => uint80[256] gains)
+        public collateralGainsByDepositor;
 
     mapping(address depositor => uint256 rewards) private storedPendingReward;
 
@@ -78,19 +79,20 @@ contract StabilityPool is VineOwnable, SystemStart {
      */
 
     // index values are mapped against the values within `collateralTokens`
-    mapping(uint128 => mapping(uint128 => uint256[256])) public epochToScaleToSums;
+    mapping(uint128 => mapping(uint128 => uint256[256]))
+        public epochToScaleToSums;
 
     /*
-     * Similarly, the sum 'G' is used to calculate Vine gains. During it's lifetime, each deposit d_t earns a Vine gain of
+     * Similarly, the sum 'G' is used to calculate Bit gains. During it's lifetime, each deposit d_t earns a Bit gain of
      *  ( d_t * [G - G_t] )/P_t, where G_t is the depositor's snapshot of G taken at time t when  the deposit was made.
      *
-     *  Vine reward events occur are triggered by depositor operations (new deposit, topup, withdrawal), and liquidations.
-     *  In each case, the Vine reward is issued (i.e. G is updated), before other state changes are made.
+     *  Bit reward events occur are triggered by depositor operations (new deposit, topup, withdrawal), and liquidations.
+     *  In each case, the Bit reward is issued (i.e. G is updated), before other state changes are made.
      */
     mapping(uint128 => mapping(uint128 => uint256)) public epochToScaleToG;
 
-    // Error tracker for the error correction in the Vine issuance calculation
-    uint256 public lastVineError;
+    // Error tracker for the error correction in the Bit issuance calculation
+    uint256 public lastBitError;
     // Error trackers for the error correction in the offset calculation
     uint256[256] public lastCollateralError_Offset;
     uint256 public lastDebtLossError_Offset;
@@ -127,32 +129,45 @@ contract StabilityPool is VineOwnable, SystemStart {
     event EpochUpdated(uint128 _currentEpoch);
     event ScaleUpdated(uint128 _currentScale);
 
-    event DepositSnapshotUpdated(address indexed _depositor, uint256 _P, uint256 _G);
+    event DepositSnapshotUpdated(
+        address indexed _depositor,
+        uint256 _P,
+        uint256 _G
+    );
     event UserDepositChanged(address indexed _depositor, uint256 _newDeposit);
 
-    event CollateralGainWithdrawn(address indexed _depositor, uint256[] _collateral);
+    event CollateralGainWithdrawn(
+        address indexed _depositor,
+        uint256[] _collateral
+    );
     event CollateralOverwritten(IERC20 oldCollateral, IERC20 newCollateral);
 
-    event RewardClaimed(address indexed account, address indexed recipient, uint256 claimed);
+    event RewardClaimed(
+        address indexed account,
+        address indexed recipient,
+        uint256 claimed
+    );
 
     constructor(
-        address _vineCore,
+        address _bitCore,
         IDebtToken _debtTokenAddress,
         address _factory
-    ) VineOwnable(_vineCore) SystemStart(_vineCore) {
+    ) BitOwnable(_bitCore) SystemStart(_bitCore) {
         debtToken = _debtTokenAddress;
         factory = _factory;
         periodFinish = uint32(block.timestamp - 1);
     }
 
-    receive() payable external {
-
-    }
+    receive() external payable {}
 
     function setInitialParameters(
-        IVineVault _vault,
-        address _liquidationManager) external {
-        require(liquidationManager == address(0) && _liquidationManager != address(0));
+        IBitVault _vault,
+        address _liquidationManager
+    ) external {
+        require(
+            liquidationManager == address(0) &&
+                _liquidationManager != address(0)
+        );
         vault = _vault;
         liquidationManager = _liquidationManager;
     }
@@ -169,8 +184,12 @@ contract StabilityPool is VineOwnable, SystemStart {
         }
         if (!collateralEnabled) {
             Queue memory queueCached = queue;
-            if (queueCached.nextSunsetIndexKey > queueCached.firstSunsetIndexKey) {
-                SunsetIndex memory sIdx = _sunsetIndexes[queueCached.firstSunsetIndexKey];
+            if (
+                queueCached.nextSunsetIndexKey > queueCached.firstSunsetIndexKey
+            ) {
+                SunsetIndex memory sIdx = _sunsetIndexes[
+                    queueCached.firstSunsetIndexKey
+                ];
                 if (sIdx.expiry < block.timestamp) {
                     delete _sunsetIndexes[queue.firstSunsetIndexKey++];
                     _overwriteCollateral(_collateral, sIdx.idx);
@@ -181,12 +200,18 @@ contract StabilityPool is VineOwnable, SystemStart {
             indexByCollateral[_collateral] = collateralTokens.length;
         } else {
             // revert if the factory is trying to deploy a new TM with a sunset collateral
-            require(indexByCollateral[_collateral] > 0, "Collateral is sunsetting");
+            require(
+                indexByCollateral[_collateral] > 0,
+                "Collateral is sunsetting"
+            );
         }
     }
 
     function _overwriteCollateral(IERC20 _newCollateral, uint256 idx) internal {
-        require(indexByCollateral[_newCollateral] == 0, "Collateral must be sunset");
+        require(
+            indexByCollateral[_newCollateral] == 0,
+            "Collateral must be sunset"
+        );
         uint256 length = collateralTokens.length;
         require(idx < length, "Index too large");
         uint256 externalLoopEnd = currentEpoch;
@@ -216,7 +241,10 @@ contract StabilityPool is VineOwnable, SystemStart {
 
      */
     function startCollateralSunset(IERC20 collateral) external onlyOwner {
-        require(indexByCollateral[collateral] > 0, "Collateral already sunsetting");
+        require(
+            indexByCollateral[collateral] > 0,
+            "Collateral already sunsetting"
+        );
         _sunsetIndexes[queue.nextSunsetIndexKey++] = SunsetIndex(
             uint128(indexByCollateral[collateral] - 1),
             uint128(block.timestamp + SUNSET_DURATION)
@@ -232,14 +260,14 @@ contract StabilityPool is VineOwnable, SystemStart {
 
     /*  provideToSP():
      *
-     * - Triggers a Vine issuance, based on time passed since the last issuance. The Vine issuance is shared between *all* depositors and front ends
+     * - Triggers a Bit issuance, based on time passed since the last issuance. The Bit issuance is shared between *all* depositors and front ends
      * - Tags the deposit with the provided front end tag param, if it's a new deposit
-     * - Sends depositor's accumulated gains (Vine, collateral) to depositor
-     * - Sends the tagged front end's accumulated Vine gains to the tagged front end
+     * - Sends depositor's accumulated gains (Bit, collateral) to depositor
+     * - Sends the tagged front end's accumulated Bit gains to the tagged front end
      * - Increases deposit and tagged front end's stake, and takes new snapshots for each.
      */
     function provideToSP(uint256 _amount) external {
-        require(!VINE_CORE.paused(), "Deposits are paused");
+        require(!bit_CORE.paused(), "Deposits are paused");
         require(_amount > 0, "StabilityPool: Amount must be non-zero");
 
         _triggerRewardIssuance();
@@ -267,10 +295,10 @@ contract StabilityPool is VineOwnable, SystemStart {
 
     /*  withdrawFromSP():
      *
-     * - Triggers a Vine issuance, based on time passed since the last issuance. The Vine issuance is shared between *all* depositors and front ends
+     * - Triggers a Bit issuance, based on time passed since the last issuance. The Bit issuance is shared between *all* depositors and front ends
      * - Removes the deposit's front end tag if it is a full withdrawal
-     * - Sends all depositor's accumulated gains (Vine, collateral) to depositor
-     * - Sends the tagged front end's accumulated Vine gains to the tagged front end
+     * - Sends all depositor's accumulated gains (Bit, collateral) to depositor
+     * - Sends the tagged front end's accumulated Bit gains to the tagged front end
      * - Decreases deposit and tagged front end's stake, and takes new snapshots for each.
      *
      * If _amount > userDeposit, the user withdraws all of their compounded deposit.
@@ -278,15 +306,21 @@ contract StabilityPool is VineOwnable, SystemStart {
     function withdrawFromSP(uint256 _amount) external {
         uint256 initialDeposit = accountDeposits[msg.sender].amount;
         uint128 depositTimestamp = accountDeposits[msg.sender].timestamp;
-        require(initialDeposit > 0, "StabilityPool: User must have a non-zero deposit");
-        require(depositTimestamp < block.timestamp, "!Deposit and withdraw same block");
+        require(
+            initialDeposit > 0,
+            "StabilityPool: User must have a non-zero deposit"
+        );
+        require(
+            depositTimestamp < block.timestamp,
+            "!Deposit and withdraw same block"
+        );
 
         _triggerRewardIssuance();
 
         _accrueDepositorCollateralGain(msg.sender);
 
         uint256 compoundedDebtDeposit = getCompoundedDebtDeposit(msg.sender);
-        uint256 debtToWithdraw = VineMath._min(_amount, compoundedDebtDeposit);
+        uint256 debtToWithdraw = BitMath._min(_amount, compoundedDebtDeposit);
 
         _accrueRewards(msg.sender);
 
@@ -297,13 +331,16 @@ contract StabilityPool is VineOwnable, SystemStart {
 
         // Update deposit
         uint256 newDeposit = compoundedDebtDeposit - debtToWithdraw;
-        accountDeposits[msg.sender] = AccountDeposit({ amount: uint128(newDeposit), timestamp: depositTimestamp });
+        accountDeposits[msg.sender] = AccountDeposit({
+            amount: uint128(newDeposit),
+            timestamp: depositTimestamp
+        });
 
         _updateSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
     }
 
-    // --- Vine issuance functions ---
+    // --- Bit issuance functions ---
 
     function _triggerRewardIssuance() internal {
         _updateG(_vestedEmissions());
@@ -337,34 +374,35 @@ contract StabilityPool is VineOwnable, SystemStart {
         return duration * rewardRate;
     }
 
-    function _updateG(uint256 _vineIssuance) internal {
+    function _updateG(uint256 _bitIssuance) internal {
         uint256 totalDebt = totalDebtTokenDeposits; // cached to save an SLOAD
         /*
-         * When total deposits is 0, G is not updated. In this case, the Vine issued can not be obtained by later
+         * When total deposits is 0, G is not updated. In this case, the Bit issued can not be obtained by later
          * depositors - it is missed out on, and remains in the balanceof the Treasury contract.
          *
          */
-        if (totalDebt == 0 || _vineIssuance == 0) {
+        if (totalDebt == 0 || _bitIssuance == 0) {
             return;
         }
 
-        uint256 vinePerUnitStaked;
-        vinePerUnitStaked = _computeVinePerUnitStaked(_vineIssuance, totalDebt);
+        uint256 bitPerUnitStaked;
+        bitPerUnitStaked = _computeBitPerUnitStaked(_bitIssuance, totalDebt);
         uint128 currentEpochCached = currentEpoch;
         uint128 currentScaleCached = currentScale;
-        uint256 marginalVineGain = vinePerUnitStaked * P;
-        uint256 newG = epochToScaleToG[currentEpochCached][currentScaleCached] + marginalVineGain;
+        uint256 marginalBitGain = bitPerUnitStaked * P;
+        uint256 newG = epochToScaleToG[currentEpochCached][currentScaleCached] +
+            marginalBitGain;
         epochToScaleToG[currentEpochCached][currentScaleCached] = newG;
 
         emit G_Updated(newG, currentEpochCached, currentScaleCached);
     }
 
-    function _computeVinePerUnitStaked(
-        uint256 _vineIssuance,
+    function _computeBitPerUnitStaked(
+        uint256 _bitIssuance,
         uint256 _totalDebtTokenDeposits
     ) internal returns (uint256) {
         /*
-         * Calculate the Vine-per-unit staked.  Division uses a "feedback" error correction, to keep the
+         * Calculate the Bit-per-unit staked.  Division uses a "feedback" error correction, to keep the
          * cumulative error low in the running total G:
          *
          * 1) Form a numerator which compensates for the floor division error that occurred the last time this
@@ -374,12 +412,15 @@ contract StabilityPool is VineOwnable, SystemStart {
          * 4) Store this error for use in the next correction when this function is called.
          * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
          */
-        uint256 vineNumerator = (_vineIssuance * DECIMAL_PRECISION) + lastVineError;
+        uint256 bitNumerator = (_bitIssuance * DECIMAL_PRECISION) +
+            lastBitError;
 
-        uint256 vinePerUnitStaked = vineNumerator / _totalDebtTokenDeposits;
-        lastVineError = vineNumerator - (vinePerUnitStaked * _totalDebtTokenDeposits);
+        uint256 bitPerUnitStaked = bitNumerator / _totalDebtTokenDeposits;
+        lastBitError =
+            bitNumerator -
+            (bitPerUnitStaked * _totalDebtTokenDeposits);
 
-        return vinePerUnitStaked;
+        return bitPerUnitStaked;
     }
 
     // --- Liquidation functions ---
@@ -387,12 +428,23 @@ contract StabilityPool is VineOwnable, SystemStart {
     /*
      * Cancels out the specified debt against the Debt contained in the Stability Pool (as far as possible)
      */
-    function offset(IERC20 collateral, uint256 _debtToOffset, uint256 _collToAdd) external virtual {
+    function offset(
+        IERC20 collateral,
+        uint256 _debtToOffset,
+        uint256 _collToAdd
+    ) external virtual {
         _offset(collateral, _debtToOffset, _collToAdd);
     }
 
-    function _offset(IERC20 collateral, uint256 _debtToOffset, uint256 _collToAdd) internal {
-        require(msg.sender == liquidationManager, "StabilityPool: Caller is not Liquidation Manager");
+    function _offset(
+        IERC20 collateral,
+        uint256 _debtToOffset,
+        uint256 _collToAdd
+    ) internal {
+        require(
+            msg.sender == liquidationManager,
+            "StabilityPool: Caller is not Liquidation Manager"
+        );
         uint256 idx = indexByCollateral[collateral];
         idx -= 1;
 
@@ -403,14 +455,21 @@ contract StabilityPool is VineOwnable, SystemStart {
 
         _triggerRewardIssuance();
 
-        (uint256 collateralGainPerUnitStaked, uint256 debtLossPerUnitStaked) = _computeRewardsPerUnitStaked(
-            _collToAdd,
-            _debtToOffset,
-            totalDebt,
-            idx
-        );
+        (
+            uint256 collateralGainPerUnitStaked,
+            uint256 debtLossPerUnitStaked
+        ) = _computeRewardsPerUnitStaked(
+                _collToAdd,
+                _debtToOffset,
+                totalDebt,
+                idx
+            );
 
-        _updateRewardSumAndProduct(collateralGainPerUnitStaked, debtLossPerUnitStaked, idx); // updates S and P
+        _updateRewardSumAndProduct(
+            collateralGainPerUnitStaked,
+            debtLossPerUnitStaked,
+            idx
+        ); // updates S and P
 
         // Cancel the liquidated Debt debt with the Debt in the stability pool
         _decreaseDebt(_debtToOffset);
@@ -423,7 +482,13 @@ contract StabilityPool is VineOwnable, SystemStart {
         uint256 _debtToOffset,
         uint256 _totalDebtTokenDeposits,
         uint256 idx
-    ) internal returns (uint256 collateralGainPerUnitStaked, uint256 debtLossPerUnitStaked) {
+    )
+        internal
+        returns (
+            uint256 collateralGainPerUnitStaked,
+            uint256 debtLossPerUnitStaked
+        )
+    {
         /*
          * Compute the Debt and collateral rewards. Uses a "feedback" error correction, to keep
          * the cumulative error in the P and S state variables low:
@@ -435,23 +500,33 @@ contract StabilityPool is VineOwnable, SystemStart {
          * 4) Store these errors for use in the next correction when this function is called.
          * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
          */
-        uint256 collateralNumerator = (_collToAdd * DECIMAL_PRECISION) + lastCollateralError_Offset[idx];
+        uint256 collateralNumerator = (_collToAdd * DECIMAL_PRECISION) +
+            lastCollateralError_Offset[idx];
 
         if (_debtToOffset == _totalDebtTokenDeposits) {
             debtLossPerUnitStaked = DECIMAL_PRECISION; // When the Pool depletes to 0, so does each deposit
             lastDebtLossError_Offset = 0;
         } else {
-            uint256 debtLossNumerator = (_debtToOffset * DECIMAL_PRECISION) - lastDebtLossError_Offset;
+            uint256 debtLossNumerator = (_debtToOffset * DECIMAL_PRECISION) -
+                lastDebtLossError_Offset;
             /*
              * Add 1 to make error in quotient positive. We want "slightly too much" Debt loss,
              * which ensures the error in any given compoundedDebtDeposit favors the Stability Pool.
              */
-            debtLossPerUnitStaked = (debtLossNumerator / _totalDebtTokenDeposits) + 1;
-            lastDebtLossError_Offset = (debtLossPerUnitStaked * _totalDebtTokenDeposits) - debtLossNumerator;
+            debtLossPerUnitStaked =
+                (debtLossNumerator / _totalDebtTokenDeposits) +
+                1;
+            lastDebtLossError_Offset =
+                (debtLossPerUnitStaked * _totalDebtTokenDeposits) -
+                debtLossNumerator;
         }
 
-        collateralGainPerUnitStaked = collateralNumerator / _totalDebtTokenDeposits;
-        lastCollateralError_Offset[idx] = collateralNumerator - (collateralGainPerUnitStaked * _totalDebtTokenDeposits);
+        collateralGainPerUnitStaked =
+            collateralNumerator /
+            _totalDebtTokenDeposits;
+        lastCollateralError_Offset[idx] =
+            collateralNumerator -
+            (collateralGainPerUnitStaked * _totalDebtTokenDeposits);
 
         return (collateralGainPerUnitStaked, debtLossPerUnitStaked);
     }
@@ -469,11 +544,14 @@ contract StabilityPool is VineOwnable, SystemStart {
          * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool Debt in the liquidation.
          * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - DebtLossPerUnitStaked)
          */
-        uint256 newProductFactor = uint256(DECIMAL_PRECISION) - _debtLossPerUnitStaked;
+        uint256 newProductFactor = uint256(DECIMAL_PRECISION) -
+            _debtLossPerUnitStaked;
 
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
-        uint256 currentS = epochToScaleToSums[currentEpochCached][currentScaleCached][idx];
+        uint256 currentS = epochToScaleToSums[currentEpochCached][
+            currentScaleCached
+        ][idx];
 
         /*
          * Calculate the new S first, before we update P.
@@ -482,7 +560,8 @@ contract StabilityPool is VineOwnable, SystemStart {
          *
          * Since S corresponds to collateral gain, and P to deposit loss, we update S first.
          */
-        uint256 marginalCollateralGain = _collateralGainPerUnitStaked * currentP;
+        uint256 marginalCollateralGain = _collateralGainPerUnitStaked *
+            currentP;
         uint256 newS = currentS + marginalCollateralGain;
         epochToScaleToSums[currentEpochCached][currentScaleCached][idx] = newS;
         emit S_Updated(idx, newS, currentEpochCached, currentScaleCached);
@@ -496,8 +575,12 @@ contract StabilityPool is VineOwnable, SystemStart {
             newP = DECIMAL_PRECISION;
 
             // If multiplying P by a non-zero product factor would reduce P below the scale boundary, increment the scale
-        } else if ((currentP * newProductFactor) / DECIMAL_PRECISION < SCALE_FACTOR) {
-            newP = (currentP * newProductFactor * SCALE_FACTOR) / DECIMAL_PRECISION;
+        } else if (
+            (currentP * newProductFactor) / DECIMAL_PRECISION < SCALE_FACTOR
+        ) {
+            newP =
+                (currentP * newProductFactor * SCALE_FACTOR) /
+                DECIMAL_PRECISION;
             currentScale = currentScaleCached + 1;
             emit ScaleUpdated(currentScale);
         } else {
@@ -522,17 +605,25 @@ contract StabilityPool is VineOwnable, SystemStart {
      * where S(0) and P(0) are the depositor's snapshots of the sum S and product P, respectively.
      * d0 is the last recorded deposit value.
      */
-    function getDepositorCollateralGain(address _depositor) external view returns (uint256[] memory collateralGains) {
+    function getDepositorCollateralGain(
+        address _depositor
+    ) external view returns (uint256[] memory collateralGains) {
         collateralGains = new uint256[](collateralTokens.length);
 
         uint256 P_Snapshot = depositSnapshots[_depositor].P;
         if (P_Snapshot == 0) return collateralGains;
-        uint80[256] storage depositorGains = collateralGainsByDepositor[_depositor];
+        uint80[256] storage depositorGains = collateralGainsByDepositor[
+            _depositor
+        ];
         uint256 initialDeposit = accountDeposits[_depositor].amount;
         uint128 epochSnapshot = depositSnapshots[_depositor].epoch;
         uint128 scaleSnapshot = depositSnapshots[_depositor].scale;
-        uint256[256] storage sums = epochToScaleToSums[epochSnapshot][scaleSnapshot];
-        uint256[256] storage nextSums = epochToScaleToSums[epochSnapshot][scaleSnapshot + 1];
+        uint256[256] storage sums = epochToScaleToSums[epochSnapshot][
+            scaleSnapshot
+        ];
+        uint256[256] storage nextSums = epochToScaleToSums[epochSnapshot][
+            scaleSnapshot + 1
+        ];
         uint256[256] storage depSums = depositSums[_depositor];
 
         for (uint256 i = 0; i < collateralGains.length; i++) {
@@ -540,13 +631,20 @@ contract StabilityPool is VineOwnable, SystemStart {
             if (sums[i] == 0) continue; // Collateral was overwritten or not gains
             uint256 firstPortion = sums[i] - depSums[i];
             uint256 secondPortion = nextSums[i] / SCALE_FACTOR;
-            collateralGains[i] += (initialDeposit * (firstPortion + secondPortion)) / P_Snapshot / DECIMAL_PRECISION;
+            collateralGains[i] +=
+                (initialDeposit * (firstPortion + secondPortion)) /
+                P_Snapshot /
+                DECIMAL_PRECISION;
         }
         return collateralGains;
     }
 
-    function _accrueDepositorCollateralGain(address _depositor) private returns (bool hasGains) {
-        uint80[256] storage depositorGains = collateralGainsByDepositor[_depositor];
+    function _accrueDepositorCollateralGain(
+        address _depositor
+    ) private returns (bool hasGains) {
+        uint80[256] storage depositorGains = collateralGainsByDepositor[
+            _depositor
+        ];
         uint256 collaterals = collateralTokens.length;
         uint256 initialDeposit = accountDeposits[_depositor].amount;
         hasGains = false;
@@ -558,8 +656,12 @@ contract StabilityPool is VineOwnable, SystemStart {
         uint128 scaleSnapshot = depositSnapshots[_depositor].scale;
         uint256 P_Snapshot = depositSnapshots[_depositor].P;
 
-        uint256[256] storage sums = epochToScaleToSums[epochSnapshot][scaleSnapshot];
-        uint256[256] storage nextSums = epochToScaleToSums[epochSnapshot][scaleSnapshot + 1];
+        uint256[256] storage sums = epochToScaleToSums[epochSnapshot][
+            scaleSnapshot
+        ];
+        uint256[256] storage nextSums = epochToScaleToSums[epochSnapshot][
+            scaleSnapshot + 1
+        ];
         uint256[256] storage depSums = depositSums[_depositor];
 
         for (uint256 i = 0; i < collaterals; i++) {
@@ -568,28 +670,33 @@ contract StabilityPool is VineOwnable, SystemStart {
             uint256 firstPortion = sums[i] - depSums[i];
             uint256 secondPortion = nextSums[i] / SCALE_FACTOR;
             depositorGains[i] += uint80(
-                (initialDeposit * (firstPortion + secondPortion)) / P_Snapshot / DECIMAL_PRECISION
+                (initialDeposit * (firstPortion + secondPortion)) /
+                    P_Snapshot /
+                    DECIMAL_PRECISION
             );
         }
         return (hasGains);
     }
 
     /*
-     * Calculate the Vine gain earned by a deposit since its last snapshots were taken.
-     * Given by the formula:  Vine = d0 * (G - G(0))/P(0)
+     * Calculate the Bit gain earned by a deposit since its last snapshots were taken.
+     * Given by the formula:  Bit = d0 * (G - G(0))/P(0)
      * where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
      * d0 is the last recorded deposit value.
      */
-    function claimableReward(address _depositor) external view returns (uint256) {
+    function claimableReward(
+        address _depositor
+    ) external view returns (uint256) {
         uint256 totalDebt = totalDebtTokenDeposits;
         uint256 initialDeposit = accountDeposits[_depositor].amount;
 
         if (totalDebt == 0 || initialDeposit == 0) {
             return storedPendingReward[_depositor];
         }
-        uint256 vineNumerator = (_vestedEmissions() * DECIMAL_PRECISION) + lastVineError;
-        uint256 vinePerUnitStaked = vineNumerator / totalDebt;
-        uint256 marginalVineGain = vinePerUnitStaked * P;
+        uint256 bitNumerator = (_vestedEmissions() * DECIMAL_PRECISION) +
+            lastBitError;
+        uint256 bitPerUnitStaked = bitNumerator / totalDebt;
+        uint256 marginalBitGain = bitPerUnitStaked * P;
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
         uint128 epochSnapshot = snapshots.epoch;
@@ -597,11 +704,21 @@ contract StabilityPool is VineOwnable, SystemStart {
         uint256 firstPortion;
         uint256 secondPortion;
         if (scaleSnapshot == currentScale) {
-            firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot] - snapshots.G + marginalVineGain;
-            secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot + 1] / SCALE_FACTOR;
+            firstPortion =
+                epochToScaleToG[epochSnapshot][scaleSnapshot] -
+                snapshots.G +
+                marginalBitGain;
+            secondPortion =
+                epochToScaleToG[epochSnapshot][scaleSnapshot + 1] /
+                SCALE_FACTOR;
         } else {
-            firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot] - snapshots.G;
-            secondPortion = (epochToScaleToG[epochSnapshot][scaleSnapshot + 1] + marginalVineGain) / SCALE_FACTOR;
+            firstPortion =
+                epochToScaleToG[epochSnapshot][scaleSnapshot] -
+                snapshots.G;
+            secondPortion =
+                (epochToScaleToG[epochSnapshot][scaleSnapshot + 1] +
+                    marginalBitGain) /
+                SCALE_FACTOR;
         }
 
         return
@@ -611,7 +728,9 @@ contract StabilityPool is VineOwnable, SystemStart {
             DECIMAL_PRECISION;
     }
 
-    function _claimableReward(address _depositor) private view returns (uint256) {
+    function _claimableReward(
+        address _depositor
+    ) private view returns (uint256) {
         uint256 initialDeposit = accountDeposits[_depositor].amount;
         if (initialDeposit == 0) {
             return 0;
@@ -619,16 +738,16 @@ contract StabilityPool is VineOwnable, SystemStart {
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        return _getVineGainFromSnapshots(initialDeposit, snapshots);
+        return _getBitGainFromSnapshots(initialDeposit, snapshots);
     }
 
-    function _getVineGainFromSnapshots(
+    function _getBitGainFromSnapshots(
         uint256 initialStake,
         Snapshots memory snapshots
     ) internal view returns (uint256) {
         /*
-         * Grab the sum 'G' from the epoch at which the stake was made. The Vine gain may span up to one scale change.
-         * If it does, the second portion of the Vine gain is scaled by 1e9.
+         * Grab the sum 'G' from the epoch at which the stake was made. The Bit gain may span up to one scale change.
+         * If it does, the second portion of the Bit gain is scaled by 1e9.
          * If the gain spans no scale change, the second portion will be 0.
          */
         uint128 epochSnapshot = snapshots.epoch;
@@ -636,12 +755,17 @@ contract StabilityPool is VineOwnable, SystemStart {
         uint256 G_Snapshot = snapshots.G;
         uint256 P_Snapshot = snapshots.P;
 
-        uint256 firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot] - G_Snapshot;
-        uint256 secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot + 1] / SCALE_FACTOR;
+        uint256 firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot] -
+            G_Snapshot;
+        uint256 secondPortion = epochToScaleToG[epochSnapshot][
+            scaleSnapshot + 1
+        ] / SCALE_FACTOR;
 
-        uint256 vineGain = (initialStake * (firstPortion + secondPortion)) / P_Snapshot / DECIMAL_PRECISION;
+        uint256 bitGain = (initialStake * (firstPortion + secondPortion)) /
+            P_Snapshot /
+            DECIMAL_PRECISION;
 
-        return vineGain;
+        return bitGain;
     }
 
     // --- Compounded deposit and compounded front end stake ---
@@ -650,7 +774,9 @@ contract StabilityPool is VineOwnable, SystemStart {
      * Return the user's compounded deposit. Given by the formula:  d = d0 * P/P(0)
      * where P(0) is the depositor's snapshot of the product P, taken when they last updated their deposit.
      */
-    function getCompoundedDebtDeposit(address _depositor) public view returns (uint256) {
+    function getCompoundedDebtDeposit(
+        address _depositor
+    ) public view returns (uint256) {
         uint256 initialDeposit = accountDeposits[_depositor].amount;
         if (initialDeposit == 0) {
             return 0;
@@ -658,7 +784,10 @@ contract StabilityPool is VineOwnable, SystemStart {
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        uint256 compoundedDeposit = _getCompoundedStakeFromSnapshots(initialDeposit, snapshots);
+        uint256 compoundedDeposit = _getCompoundedStakeFromSnapshots(
+            initialDeposit,
+            snapshots
+        );
         return compoundedDeposit;
     }
 
@@ -708,24 +837,37 @@ contract StabilityPool is VineOwnable, SystemStart {
         return compoundedStake;
     }
 
-    // --- Sender functions for Debt deposit, collateral gains and Vine gains ---
-    function claimCollateralGains(address recipient, uint256[] calldata collateralIndexes) public virtual {
+    // --- Sender functions for Debt deposit, collateral gains and Bit gains ---
+    function claimCollateralGains(
+        address recipient,
+        uint256[] calldata collateralIndexes
+    ) public virtual {
         _accrueDepositorCollateralGain(msg.sender);
 
         uint256 loopEnd = collateralIndexes.length;
-        uint256[] memory collateralGains = new uint256[](collateralTokens.length);
+        uint256[] memory collateralGains = new uint256[](
+            collateralTokens.length
+        );
 
-        uint80[256] storage depositorGains = collateralGainsByDepositor[msg.sender];
+        uint80[256] storage depositorGains = collateralGainsByDepositor[
+            msg.sender
+        ];
         for (uint256 i; i < loopEnd; ) {
             uint256 collateralIndex = collateralIndexes[i];
             uint256 gains = depositorGains[collateralIndex];
             if (gains > 0) {
                 collateralGains[collateralIndex] = gains;
                 depositorGains[collateralIndex] = 0;
-                if(address(collateralTokens[collateralIndex]) == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+                if (
+                    address(collateralTokens[collateralIndex]) ==
+                    0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+                ) {
                     payable(recipient).transfer(gains);
                 } else {
-                    collateralTokens[collateralIndex].safeTransfer(recipient, gains);
+                    collateralTokens[collateralIndex].safeTransfer(
+                        recipient,
+                        gains
+                    );
                 }
             }
             unchecked {
@@ -754,8 +896,12 @@ contract StabilityPool is VineOwnable, SystemStart {
         uint256 currentP = P;
 
         // Get S and G for the current epoch and current scale
-        uint256[256] storage currentS = epochToScaleToSums[currentEpochCached][currentScaleCached];
-        uint256 currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
+        uint256[256] storage currentS = epochToScaleToSums[currentEpochCached][
+            currentScaleCached
+        ];
+        uint256 currentG = epochToScaleToG[currentEpochCached][
+            currentScaleCached
+        ];
 
         // Record new snapshots of the latest running product P, sum S, and sum G, for the depositor
         depositSnapshots[_depositor].P = currentP;
@@ -774,7 +920,9 @@ contract StabilityPool is VineOwnable, SystemStart {
     //This assumes the snapshot gets updated in the caller
     function _accrueRewards(address _depositor) internal {
         uint256 amount = _claimableReward(_depositor);
-        storedPendingReward[_depositor] = storedPendingReward[_depositor] + amount;
+        storedPendingReward[_depositor] =
+            storedPendingReward[_depositor] +
+            amount;
     }
 
     function claimReward(address recipient) external returns (uint256 amount) {
@@ -786,7 +934,10 @@ contract StabilityPool is VineOwnable, SystemStart {
         return amount;
     }
 
-    function vaultClaimReward(address claimant, address) external returns (uint256 amount) {
+    function vaultClaimReward(
+        address claimant,
+        address
+    ) external returns (uint256 amount) {
         require(msg.sender == address(vault));
 
         return _claimReward(claimant);
@@ -808,7 +959,10 @@ contract StabilityPool is VineOwnable, SystemStart {
             if (debtLoss > 0 || hasGains || amount > 0) {
                 // Update deposit
                 uint256 newDeposit = compoundedDebtDeposit;
-                accountDeposits[account] = AccountDeposit({ amount: uint128(newDeposit), timestamp: depositTimestamp });
+                accountDeposits[account] = AccountDeposit({
+                    amount: uint128(newDeposit),
+                    timestamp: depositTimestamp
+                });
                 _updateSnapshots(account, newDeposit);
             }
         }

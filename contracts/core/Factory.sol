@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../dependencies/VineOwnable.sol";
+import "../dependencies/BitOwnable.sol";
 import "../interfaces/ITroveManager.sol";
 import "../interfaces/IBorrowerOperations.sol";
 import "../interfaces/IDebtToken.sol";
@@ -12,11 +12,11 @@ import "../interfaces/IStabilityPool.sol";
 import "../interfaces/ILiquidationManager.sol";
 
 /**
-    @title Vine Trove Factory
+    @title Bit Trove Factory
     @notice Deploys cloned pairs of `TroveManager` and `SortedTroves` in order to
             add new collateral types within the system.
  */
-contract Factory is VineOwnable {
+contract Factory is BitOwnable {
     using Clones for address;
 
     // fixed single-deployment contracts
@@ -43,12 +43,14 @@ contract Factory is VineOwnable {
         uint256 MCR; // 15 * 1e17  (150%)
     }
 
-    event NewDeployment(address collateral, address priceFeed, address troveManager, address sortedTroves);
+    event NewDeployment(
+        address collateral,
+        address priceFeed,
+        address troveManager,
+        address sortedTroves
+    );
 
-    constructor(
-        address _vineCore,
-        IDebtToken _debtToken
-    ) VineOwnable(_vineCore) {
+    constructor(address _bitCore, IDebtToken _debtToken) BitOwnable(_bitCore) {
         debtToken = _debtToken;
     }
 
@@ -57,7 +59,8 @@ contract Factory is VineOwnable {
         IBorrowerOperations _borrowerOperations,
         address _sortedTroves,
         address _troveManager,
-        ILiquidationManager _liquidationManager) external {
+        ILiquidationManager _liquidationManager
+    ) external {
         require(sortedTrovesImpl == address(0) && _sortedTroves != address(0));
         stabilityPool = _stabilityPool;
         borrowerOperations = _borrowerOperations;
@@ -76,7 +79,7 @@ contract Factory is VineOwnable {
         @dev * When using the default `PriceFeed`, ensure it is configured correctly
                prior to calling this function.
              * After calling this function, the owner should also call `Vault.registerReceiver`
-               to enable VINE emissions on the newly deployed `TroveManager`
+               to enable bit emissions on the newly deployed `TroveManager`
         @param collateral Collateral token to use in new deployment
         @param priceFeed Custom `PriceFeed` deployment. Leave as `address(0)` to use the default.
         @param customTroveManagerImpl Custom `TroveManager` implementation to clone from.
@@ -92,14 +95,26 @@ contract Factory is VineOwnable {
         address customSortedTrovesImpl,
         DeploymentParams memory params
     ) external onlyOwner {
-        address implementation = customTroveManagerImpl == address(0) ? troveManagerImpl : customTroveManagerImpl;
-        address troveManager = implementation.cloneDeterministic(bytes32(bytes20(collateral)));
+        address implementation = customTroveManagerImpl == address(0)
+            ? troveManagerImpl
+            : customTroveManagerImpl;
+        address troveManager = implementation.cloneDeterministic(
+            bytes32(bytes20(collateral))
+        );
         troveManagers.push(troveManager);
 
-        implementation = customSortedTrovesImpl == address(0) ? sortedTrovesImpl : customSortedTrovesImpl;
-        address sortedTroves = implementation.cloneDeterministic(bytes32(bytes20(troveManager)));
+        implementation = customSortedTrovesImpl == address(0)
+            ? sortedTrovesImpl
+            : customSortedTrovesImpl;
+        address sortedTroves = implementation.cloneDeterministic(
+            bytes32(bytes20(troveManager))
+        );
 
-        ITroveManager(troveManager).setAddresses(priceFeed, sortedTroves, collateral);
+        ITroveManager(troveManager).setAddresses(
+            priceFeed,
+            sortedTroves,
+            collateral
+        );
         ISortedTroves(sortedTroves).setAddresses(troveManager);
 
         // verify that the oracle is correctly working
@@ -124,17 +139,22 @@ contract Factory is VineOwnable {
         emit NewDeployment(collateral, priceFeed, troveManager, sortedTroves);
     }
 
-    function setImplementations(address _troveManagerImpl, address _sortedTrovesImpl) external onlyOwner {
+    function setImplementations(
+        address _troveManagerImpl,
+        address _sortedTrovesImpl
+    ) external onlyOwner {
         troveManagerImpl = _troveManagerImpl;
         sortedTrovesImpl = _sortedTrovesImpl;
     }
 
-    function setTroveManager(address _troveManager, bool bol) external onlyOwner {
-        if(bol) {
+    function setTroveManager(
+        address _troveManager,
+        bool bol
+    ) external onlyOwner {
+        if (bol) {
             debtToken.enableTroveManager(_troveManager);
         } else {
             debtToken.disableTroveManager(_troveManager);
         }
-        
     }
 }

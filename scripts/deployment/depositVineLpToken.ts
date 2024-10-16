@@ -2,33 +2,32 @@ import { ethers } from "hardhat";
 
 const { contracts } = require("../config/index.ts");
 
-const lpToken = "0xf1E00B2B98d9c796963C4251738f5f6e2b31453d";
-const trove = "0x06eBC049Fa9d394Aa660E79b94c0278C677ba773";
-// from the old vine
-const lpOracle = "0x6b7BC9dD2b851587863fa5c77636869fe1206d9a";
+const lpToken = "0xfc9F6D99ED73dF84aB2EfCb99DA226ef85D41dc6";
+const trove = "0x481bd081c5Fa1B9a895a1302e6d7CCd3F9C34051";
+const lpOracle = "0x1dAA4A7f8BCa61dF8EFD157593ba0197487Ca043";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  const depositVineLpToken = await ethers.getContractFactory(
-    "DepositVineLpToken",
+  const depositBitLpToken = await ethers.getContractFactory(
+    "DepositBitLpToken",
     deployer
   );
-  const contract = await depositVineLpToken.deploy(
-    contracts["VineToken"].address,
+  const contract = await depositBitLpToken.deploy(
+    contracts["BitToken"].address,
     lpToken,
-    contracts["VineVault"].address,
+    contracts["BitVault"].address,
     trove,
-    contracts["VineCore"].address,
+    contracts["BitCore"].address,
     lpOracle
   );
   await contract.waitForDeployment();
 
-  console.log("DepositVineLpToken deployed to:", await contract.getAddress());
+  console.log("DepositBitLpToken deployed to:", await contract.getAddress());
 }
 
 main()
-  .then(() => console.log("DepositVineLpToken deployed"))
+  .then(() => console.log("DepositBitLpToken deployed"))
   .catch((error) => {
     console.error(error);
     process.exit(1);

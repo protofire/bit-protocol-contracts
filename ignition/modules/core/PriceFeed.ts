@@ -16,21 +16,21 @@ const oracle = {
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   mockBand?: NamedArtifactContractDeploymentFuture<"LPPriceOracle">
 ) => {
   let priceFeed;
   if (mockBand) {
     priceFeed = m.contract(
       "PriceFeed",
-      [vineCore, [{ ...oracle, band: mockBand }]],
-      { after: [vineCore, mockBand] }
+      [bitCore, [{ ...oracle, band: mockBand }]],
+      { after: [bitCore, mockBand] }
     );
   } else {
     priceFeed = m.contract(
       "PriceFeed",
-      [vineCore, [{ ...oracle, band: bandProtocolAddr }]],
-      { after: [vineCore] }
+      [bitCore, [{ ...oracle, band: bandProtocolAddr }]],
+      { after: [bitCore] }
     );
   }
 
