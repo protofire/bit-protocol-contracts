@@ -185,7 +185,9 @@ contract PriceFeed is BitOwnable {
         bool isValidResponse = _isFeedWorking(
             _currResponse,
             oracle.heartbeat
-        ) && !_isPriceChangeAboveMaxDeviation(_currResponse, priceRecord);
+        ) &&
+            !_isPriceStale(_currResponse.lastUpdatedBase, oracle.heartbeat) &&
+            !_isPriceChangeAboveMaxDeviation(_currResponse, priceRecord);
         if (isValidResponse) {
             uint256 price = uint256(_currResponse.rate);
             if (!oracle.isFeedWorking) {

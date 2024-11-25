@@ -66,7 +66,9 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         (INTEREST_PRECISION * 5000) / (10000 * SECONDS_IN_YEAR); //50%
 
     // During bootsrap period redemptions are not allowed
-    uint256 public constant BOOTSTRAP_PERIOD = 14 days;
+    // uint256 public constant BOOTSTRAP_PERIOD = 14 days;
+    // TODO
+    uint256 public constant BOOTSTRAP_PERIOD = 0 days;
 
     /*
      * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption.
@@ -212,13 +214,13 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         closedByRedemption
     }
 
-    event TroveUpdated(
-        address indexed _borrower,
-        uint256 _debt,
-        uint256 _coll,
-        uint256 _stake,
-        TroveManagerOperation _operation
-    );
+    // event TroveUpdated(
+    //     address indexed _borrower,
+    //     uint256 _debt,
+    //     uint256 _coll,
+    //     uint256 _stake,
+    //     TroveManagerOperation _operation
+    // );
 
     event Redemption(
         uint256 _attemptedDebtAmount,
@@ -228,7 +230,7 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
     );
     event BaseRateUpdated(uint256 _baseRate);
     event LastFeeOpTimeUpdated(uint256 _lastFeeOpTime);
-    event TotalStakesUpdated(uint256 _newTotalStakes);
+    // event TotalStakesUpdated(uint256 _newTotalStakes);
     event SystemSnapshotsUpdated(
         uint256 _totalStakesSnapshot,
         uint256 _totalCollateralSnapshot
@@ -494,7 +496,13 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
     function getTroveCollAndDebt(
         address _borrower
     ) public view checkGetter(_borrower) returns (uint256 coll, uint256 debt) {
-        (debt, coll, , ) = getEntireDebtAndColl(_borrower);
+        return _getTroveCollAndDebt(_borrower);
+    }
+
+    function _getTroveCollAndDebt(
+        address _borrower
+    ) internal view returns (uint256 coll, uint256 debt) {
+        (debt, coll, , ) = _getEntireDebtAndColl(_borrower);
         return (coll, debt);
     }
 
@@ -515,6 +523,21 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
             uint256 pendingCollateralReward
         )
     {
+        return _getEntireDebtAndColl(_borrower);
+    }
+
+    function _getEntireDebtAndColl(
+        address _borrower
+    )
+        internal
+        view
+        returns (
+            uint256 debt,
+            uint256 coll,
+            uint256 pendingDebtReward,
+            uint256 pendingCollateralReward
+        )
+    {
         Trove storage t = Troves[_borrower];
         debt = t.debt;
         coll = t.coll;
@@ -522,7 +545,7 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         (
             pendingCollateralReward,
             pendingDebtReward
-        ) = getPendingCollAndDebtRewards(_borrower);
+        ) = _getPendingCollAndDebtRewards(_borrower);
         // Accrued trove interest for correct liquidation values. This assumes the index to be updated.
         uint256 troveInterestIndex = t.activeInterestIndex;
         if (troveInterestIndex > 0) {
@@ -629,6 +652,12 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
     function getPendingCollAndDebtRewards(
         address _borrower
     ) public view checkGetter(_borrower) returns (uint256, uint256) {
+        return _getPendingCollAndDebtRewards(_borrower);
+    }
+
+    function _getPendingCollAndDebtRewards(
+        address _borrower
+    ) internal view returns (uint256, uint256) {
         RewardSnapshot memory snapshot = rewardSnapshots[_borrower];
 
         uint256 coll = L_collateral - snapshot.collateral;
@@ -829,7 +858,9 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         );
         require(_debtAmount > 0, "Az");
         require(debtToken.balanceOf(msg.sender) >= _debtAmount, "IB");
+
         _updateBalances();
+
         totals.totalDebtSupplyAtStart = getEntireSystemDebt();
 
         totals.remainingDebt = _debtAmount;
@@ -849,7 +880,7 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
             // Find the first trove with ICR >= MCR
             while (
                 currentBorrower != address(0) &&
-                getCurrentICR(currentBorrower, totals.price) < _MCR
+                _getCurrentICR(currentBorrower, totals.price) < _MCR
             ) {
                 currentBorrower = _sortedTrovesCached.getPrev(currentBorrower);
             }
@@ -1042,14 +1073,14 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         if (
             _firstRedemptionHint == address(0) ||
             !_sortedTroves.contains(_firstRedemptionHint) ||
-            getCurrentICR(_firstRedemptionHint, _price) < _MCR
+            _getCurrentICR(_firstRedemptionHint, _price) < _MCR
         ) {
             return false;
         }
 
         address nextTrove = _sortedTroves.getNext(_firstRedemptionHint);
         return
-            nextTrove == address(0) || getCurrentICR(nextTrove, _price) < _MCR;
+            nextTrove == address(0) || _getCurrentICR(nextTrove, _price) < _MCR;
     }
 
     /**
@@ -1477,7 +1508,7 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
                 (
                     uint256 pendingCollateralReward,
                     uint256 pendingDebtReward
-                ) = getPendingCollAndDebtRewards(_borrower);
+                ) = _getPendingCollAndDebtRewards(_borrower);
 
                 // Apply pending rewards to trove's state
                 coll = coll + pendingCollateralReward;
@@ -1667,6 +1698,22 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         defaultedDebt += _debt;
         defaultedCollateral += _coll;
         totalActiveCollateral -= _coll;
+    }
+
+    function _getCurrentICR(
+        address _borrower,
+        uint256 _price
+    ) internal view returns (uint256) {
+        (uint256 currentCollateral, uint256 currentDebt) = _getTroveCollAndDebt(
+            _borrower
+        );
+
+        uint256 ICR = BitMath._computeCR(
+            currentCollateral,
+            currentDebt,
+            _price
+        );
+        return ICR;
     }
 
     // --- Trove property setters ---

@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 
 const { contracts } = require("../config/index.ts");
 
-const lpToken = "0xA84d4f19B19427745C7f4656EB05Dd14FDBDAA75";
+const lpToken = "0x41bec4E1eD8CAa443Efd208ABe5134B5EC0b4a3a";
 
 async function main() {
   const [deployer] = await ethers.getSigners();

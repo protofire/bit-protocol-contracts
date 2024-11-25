@@ -28,6 +28,7 @@ const idoTokenVesting = `${modulePreffix}IDOTokenVesting`;
 const multiTroveGetter = `${modulePreffix}MultiTroveGetter`;
 const multiCollateralHintHelpers = `${modulePreffix}MultiCollateralHintHelpers`;
 const troveManagerGetters = `${modulePreffix}TroveManagerGetters`;
+const mockLpChecker = `${modulePreffix}LpChecker`;
 
 const contracts = {
   PriceFeed: {
@@ -98,6 +99,9 @@ const contracts = {
   },
   TroveManagerGetters: {
     address: addresses[troveManagerGetters],
+  },
+  LpChecker: {
+    address: addresses[mockLpChecker],
   },
   // InterimAdmin: {
   //   address: addresses[interimAdmin],

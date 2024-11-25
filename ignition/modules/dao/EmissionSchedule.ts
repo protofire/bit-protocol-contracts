@@ -7,13 +7,15 @@ export default (
   voter: NamedArtifactContractDeploymentFuture<"IncentiveVoting">,
   vault: NamedArtifactContractDeploymentFuture<"BitVault">
 ) => {
-  const initialLockWeeks = m.getParameter("initialLockWeeks", 19);
+  const initialLockWeeks = m.getParameter("initialLockWeeks", 26);
   const lockDecayWeeks = m.getParameter("lockDecayWeeks", 2);
-  const weeklyPct = m.getParameter("weeklyPct", 100);
+  const weeklyPct = m.getParameter("weeklyPct", 140);
   const scheduledWeeklyPct = m.getParameter("scheduledWeeklyPct", [
     [104, 40],
     [52, 60],
     [26, 80],
+    [12, 100],
+    [4, 120],
   ]);
 
   const emissionSchedule = m.contract(

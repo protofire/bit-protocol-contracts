@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../interfaces/IVault.sol";
 import "../dependencies/BitOwnable.sol";
 import "../interfaces/IStdReference.sol";
+import "../interfaces/ITWAPOracle.sol";
+import "../interfaces/IBitLPOracle.sol";
 
 interface ITrove {
     function storePendingReward(address account) external returns (uint256);
@@ -17,7 +19,7 @@ interface ITrove {
 contract DepositBitLpToken is BitOwnable {
     IERC20 public immutable bit;
     IBitVault public immutable vault;
-    IStdReference lpOracle;
+    IBitLPOracle lpOracle;
     IERC20 public lpToken;
     ITrove public trove;
 
@@ -77,7 +79,7 @@ contract DepositBitLpToken is BitOwnable {
         IBitVault _vault,
         address _trove,
         address bitCore,
-        IStdReference _lpOracle
+        IBitLPOracle _lpOracle
     ) BitOwnable(bitCore) {
         bit = _bit;
         lpToken = _lpToken;
@@ -94,7 +96,7 @@ contract DepositBitLpToken is BitOwnable {
         emit MaxWeeklyEmissionPctSet(10000);
     }
 
-    function setOracle(IStdReference _lpOracle) external onlyOwner {
+    function setOracle(IBitLPOracle _lpOracle) external onlyOwner {
         lpOracle = _lpOracle;
     }
 
@@ -343,14 +345,9 @@ contract DepositBitLpToken is BitOwnable {
         address account
     ) public view returns (bool) {
         if (debt == 0) return false;
-        IStdReference.ReferenceData memory data = lpOracle.getReferenceData(
-            "bitLP",
-            "USD"
-        );
-        if (
-            (((balanceOf[account] * data.rate) / 1e18) * 1000) / debt >
-            dlpThresold
-        ) return true;
+        uint price = lpOracle.getLPPrice();
+        if ((((balanceOf[account] * price) / 1e18) * 1000) / debt > dlpThresold)
+            return true;
         return false;
     }
 }

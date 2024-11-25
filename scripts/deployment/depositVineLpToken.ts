@@ -2,9 +2,9 @@ import { ethers } from "hardhat";
 
 const { contracts } = require("../config/index.ts");
 
-const lpToken = "0xfc9F6D99ED73dF84aB2EfCb99DA226ef85D41dc6";
-const trove = "0x481bd081c5Fa1B9a895a1302e6d7CCd3F9C34051";
-const lpOracle = "0x1dAA4A7f8BCa61dF8EFD157593ba0197487Ca043";
+const lpToken = "0x1FFdE6D469DAA9Ddb49922357cc2B441DeF4E019";
+const trove = "0x44fa3A93b5df7033D97c889De322512ac460284E";
+const lpOracle = "0x0A078D570bD8DBD1c452ad8e576Fa243eDD67b17";
 
 async function main() {
   const [deployer] = await ethers.getSigners();

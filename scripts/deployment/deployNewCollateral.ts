@@ -3,10 +3,10 @@ import { ethers } from "hardhat";
 const { contracts } = require("../config/index.ts");
 
 // ADD THE ADDRESS OF THE COLLATERAL TOKEN
-const collateralAddress = "0x1a384b3EC67372f4765C5d2cD5Fd786Beb51bc05";
+const collateralAddress = "0xCa9DdE1B0f02CDA170d05dD2F56c6cC1126AA195";
 const addressZero = "0x0000000000000000000000000000000000000000";
 // MAKE SURE TO CHANGE THIS TO THE CORRECT INDEX
-const collateralIndex = 1;
+const collateralIndex = 2;
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -32,7 +32,7 @@ async function main() {
   await priceFeed.setOracle(
     collateralAddress,
     contracts["LPPriceOracle"].address,
-    "PRO",
+    "PROTO",
     "USD",
     86400
   );
@@ -58,12 +58,8 @@ async function main() {
 
   await tx.wait();
 
-  console.log("here 1");
-
   const troveManagerDeployment = await factory.troveManagers(collateralIndex);
   const oldTrove = await factory.troveManagers(0);
-
-  console.log("here 2");
 
   const troveManager = await ethers.getContractAt(
     "TroveManager",
@@ -71,11 +67,7 @@ async function main() {
     deployer
   );
 
-  console.log("here 3");
-
   const sortedTrove = await troveManager.sortedTroves();
-
-  console.log("here 4");
 
   await troveManager.setLookers(
     [
@@ -88,11 +80,7 @@ async function main() {
     [true, true, true, true, true]
   );
 
-  console.log("here 5");
-
   await debtToken.setLookers([troveManagerDeployment, oldTrove], [true, true]);
-
-  console.log("here 6");
 
   console.log("Trove Manager deployed at:", troveManagerDeployment);
 }

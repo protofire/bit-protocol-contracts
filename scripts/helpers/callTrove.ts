@@ -1,57 +1,77 @@
 import { ethers } from "hardhat";
 
 // 0x94Bd7bFDCAe6Cc36455d8bf2FF9238BB1162E507
-
+// 0x1a384b3EC67372f4765C5d2cD5Fd786Beb51bc05
 const main = async () => {
   try {
     const [deployer] = await ethers.getSigners();
     const time = Math.floor(new Date().getTime() / 1000);
     const user = await deployer.getAddress();
 
-    const troveMGetter = await ethers.getContractAt(
-      "TroveManagerGetters",
-      "0x94Bd7bFDCAe6Cc36455d8bf2FF9238BB1162E507",
-      deployer
-    );
+    // const troveMGetter = await ethers.getContractAt(
+    //   "TroveManagerGetters",
+    //   "0x94Bd7bFDCAe6Cc36455d8bf2FF9238BB1162E507",
+    //   deployer
+    // );
 
     const troveM = await ethers.getContractAt(
       "TroveManager",
-      "0x562f2b88a22c6c01E8A1c88B26Dc3a64Fca3A10d",
+      "0x44fa3A93b5df7033D97c889De322512ac460284E",
       deployer
     );
 
-    const signature = await deployer.signTypedData(
-      {
-        name: "BitSignature.SignIn",
-        version: "1",
-        chainId: 23295,
-        verifyingContract: "0x94Bd7bFDCAe6Cc36455d8bf2FF9238BB1162E507",
-      },
-      {
-        SignIn: [
-          { name: "user", type: "address" },
-          { name: "time", type: "uint32" },
-        ],
-      },
-      {
-        user,
-        time,
-      }
+    const checker = await ethers.getContractAt(
+      "BitLPOracle",
+      "0x0A078D570bD8DBD1c452ad8e576Fa243eDD67b17",
+      deployer
     );
 
-    const rsv = ethers.Signature.from(signature);
-    const auth = { user, time, rsv };
-
-    const trove = await troveMGetter.getTrove(
-      auth,
-      "0x562f2b88a22c6c01E8A1c88B26Dc3a64Fca3A10d"
-    );
-
-    // const trove = await troveM.getTrove(
-    //   "0xc92a6f28c63f3e244ca73b045529b29bd9943424"
+    // const signature = await deployer.signTypedData(
+    //   {
+    //     name: "BitSignature.SignIn",
+    //     version: "1",
+    //     chainId: 23295,
+    //     verifyingContract: "0x94Bd7bFDCAe6Cc36455d8bf2FF9238BB1162E507",
+    //   },
+    //   {
+    //     SignIn: [
+    //       { name: "user", type: "address" },
+    //       { name: "time", type: "uint32" },
+    //     ],
+    //   },
+    //   {
+    //     user,
+    //     time,
+    //   }
     // );
 
-    console.log({ trove });
+    // const rsv = ethers.Signature.from(signature);
+    // const auth = { user, time, rsv };
+
+    // const trove = await troveMGetter.getTrove(
+    //   auth,
+    //   "0x562f2b88a22c6c01E8A1c88B26Dc3a64Fca3A10d"
+    // )
+
+    // const price = await checker.getLPPrice();
+    // console.log({ price });
+
+    // const some = await troveM.storePendingReward(
+    //   "0x31C2cb2cd72a0a35Bf1839a2e0d383566bf904b0"
+    // );
+    // await some.wait();
+
+    const lp = await troveM.lpChecker();
+
+    console.log({ lp });
+
+    // const getEntireDebtAndColl = await troveM.getCurrentICR(
+    //   // deployer.address,
+    //   "0xc92a6f28c63f3e244ca73b045529b29bd9943424",
+    //   "1000000000000000000"
+    // );
+
+    // console.log({ getEntireDebtAndColl });
   } catch (error) {
     console.log(error);
   }

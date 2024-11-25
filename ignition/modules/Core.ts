@@ -32,7 +32,8 @@ import deployTokenVesting from "./dao/TokenVesting";
 
 // Mocks
 import deployMockBand from "./mock/MockBand";
-// import deployMockLpChecker from "./mock/MockLpChecker";
+import deployMockTwap from "./mock/MockTWAP";
+import deployMockLpChecker from "./mock/MockLpChecker";
 // import deployMockLpToken from "./mock/MockLpToken";
 
 const NETWORK = process.env.NETWORK;
@@ -44,6 +45,7 @@ export default buildModule("CoreModule", (m) => {
     // deployMockLpChecker(m);
     // deployMockLpToken();
     // deployLuminexFactory(m);
+    deployMockTwap(m);
     const mockBand = deployMockBand(m);
     deployPriceFeed(m, bitCore, mockBand);
   } else {

@@ -23,20 +23,6 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
       chainId: 31337,
-      // UNCOMMENT TO ENABLE FORKING
-      // forking: {
-      //   enabled: true,
-      //   url: "https://oasis-sapphire-mainnet.core.chainstack.com/af94b4996475be2a75572ddb802e7ba4",
-      //   // blockNumber: 2744265,
-      // },
-      // chains: {
-      //   23294: {
-      //     hardforkHistory: {
-      //       berlin: 1000000,
-      //       london: 2000000,
-      //     },
-      //   },
-      // },
     },
     sapphire: {
       url: process.env.SAPPHIRE_URL,
@@ -49,6 +35,7 @@ const config: HardhatUserConfig = {
       url: "https://testnet.sapphire.oasis.dev/",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 0x5aff,
+      allowUnlimitedContractSize: true,
     },
     "sapphire-localnet": {
       url: "http://localhost:8545",
