@@ -7,7 +7,7 @@ const wrappedRose = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  const bitLpChecker = await ethers.getContractFactory("BitLPOracle", deployer);
+  const bitLpChecker = await ethers.getContractFactory("LPOracle", deployer);
   const contract = await bitLpChecker.deploy(
     priceFeed,
     TwapOracle,

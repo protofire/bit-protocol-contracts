@@ -7,7 +7,7 @@ export default (
   debtToken: NamedArtifactContractDeploymentFuture<"DebtToken">,
   factory: NamedArtifactContractDeploymentFuture<"Factory">
 ) => {
-  const minNetDebt = m.getParameter("minNetDebt", 1);
+  const minNetDebt = m.getParameter("minNetDebt", "10000000000000000000");
   const gasCompensation = m.getParameter(
     "gasCompensation",
     "1000000000000000000"

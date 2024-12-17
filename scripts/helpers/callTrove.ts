@@ -14,15 +14,21 @@ const main = async () => {
     //   deployer
     // );
 
-    const troveM = await ethers.getContractAt(
-      "TroveManager",
-      "0x44fa3A93b5df7033D97c889De322512ac460284E",
-      deployer
-    );
+    // const troveM = await ethers.getContractAt(
+    //   "TroveManager",
+    //   "0x44fa3A93b5df7033D97c889De322512ac460284E",
+    //   deployer
+    // );
 
-    const checker = await ethers.getContractAt(
-      "BitLPOracle",
-      "0x0A078D570bD8DBD1c452ad8e576Fa243eDD67b17",
+    // const checker = await ethers.getContractAt(
+    //   "LPOracle",
+    //   "0x0A078D570bD8DBD1c452ad8e576Fa243eDD67b17",
+    //   deployer
+    // );
+
+    const debtToken = await ethers.getContractAt(
+      "DebtToken",
+      "0xA14167756d9F86Aed12b472C29B257BBdD9974C2",
       deployer
     );
 
@@ -61,9 +67,14 @@ const main = async () => {
     // );
     // await some.wait();
 
-    const lp = await troveM.lpChecker();
+    const tx = await debtToken.transfer(
+      "0x9ba704115F0ed3a431A025ffa0525fDD1D507C3c",
+      "3000000000000000000"
+    );
 
-    console.log({ lp });
+    const a = await tx.wait();
+
+    console.log(a);
 
     // const getEntireDebtAndColl = await troveM.getCurrentICR(
     //   // deployer.address,

@@ -7,7 +7,12 @@ import "../staking/TWAPOracle.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
-contract BitLPOracle {
+/**
+ * @title LP token Oracle
+ * @notice Oracle responsible for provide LP price for the DLP staking contract
+ */
+
+contract LPOracle {
     using SafeMath for uint;
 
     address public immutable priceFeed;

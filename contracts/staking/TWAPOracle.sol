@@ -6,6 +6,11 @@ import "../external/LuminexV1Factory.sol";
 import "../external/OracleLibrary.sol";
 import "../external/V2Library.sol";
 
+/**
+ * @title TWAP Oracle
+ * @notice Oracle responsible for proving prices based on TWAP from uniswap v2 pools.
+ */
+
 contract TWAPOracle {
     uint public constant PERIOD = 24 hours;
 

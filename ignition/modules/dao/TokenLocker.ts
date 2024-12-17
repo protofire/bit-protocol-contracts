@@ -1,12 +1,6 @@
 import { NamedArtifactContractDeploymentFuture } from "@nomicfoundation/ignition-core/dist/src/types/module";
 import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/types/module-builder";
 
-// TODO
-// const MANAGER_ADDRESS =
-//   process.env.NETWORK === "localhost"
-//     ? "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-//     : process.env.PUBLIC_KEY;
-
 const MANAGER_ADDRESS = process.env.PUBLIC_KEY;
 
 export default (

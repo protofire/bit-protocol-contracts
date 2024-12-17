@@ -5,8 +5,8 @@ export default (
   m: IgnitionModuleBuilder,
   bitCore: NamedArtifactContractDeploymentFuture<"BitCore">
 ) => {
-  const name = m.getParameter("name", "reBit USD");
-  const symbol = m.getParameter("symbol", "rbitUSD");
+  const name = m.getParameter("name", "BitUSDs");
+  const symbol = m.getParameter("symbol", "BitUSDs");
   const gasCompensation = m.getParameter(
     "gasCompensation",
     "1000000000000000000"

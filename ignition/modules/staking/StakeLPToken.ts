@@ -7,9 +7,9 @@ export default (
   trove: NamedArtifactContractDeploymentFuture<"TroveManager">,
   bitCore: NamedArtifactContractDeploymentFuture<"BitCore">
 ) => {
-  const depositToken = m.contract("DepositToken", [vault, trove, bitCore], {
+  const stakeLPToken = m.contract("StakeLPToken", [vault, trove, bitCore], {
     after: [vault, trove, bitCore],
   });
 
-  return depositToken;
+  return stakeLPToken;
 };

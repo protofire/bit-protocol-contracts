@@ -14,8 +14,8 @@ import "../dependencies/BitOwnable.sol";
 contract BitToken is ERC20, IERC2612, BitOwnable {
     // --- ERC20 Data ---
 
-    string internal constant _NAME = "Bit Oasis Governance Token";
-    string internal constant _SYMBOL = "bitROSE";
+    string internal constant _NAME = "Bit Sapphire Governance Token";
+    string internal constant _SYMBOL = "BitGOVSaph";
     string public constant version = "1";
 
     // --- EIP 2612 Data ---

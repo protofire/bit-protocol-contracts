@@ -26,21 +26,14 @@ const config: HardhatUserConfig = {
     },
     sapphire: {
       url: process.env.SAPPHIRE_URL,
-      chainId: parseInt(process.env.CHAIN_ID || "0"),
+      chainId: 23294,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      // TODO: FIND A BETTER SOLUTION FOR MAINNET DEPLOYMENT
-      allowUnlimitedContractSize: true,
     },
     "sapphire-testnet": {
       url: "https://testnet.sapphire.oasis.dev/",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 0x5aff,
       allowUnlimitedContractSize: true,
-    },
-    "sapphire-localnet": {
-      url: "http://localhost:8545",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 0x5afd,
     },
   },
 };

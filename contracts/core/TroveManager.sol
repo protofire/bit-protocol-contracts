@@ -66,9 +66,7 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         (INTEREST_PRECISION * 5000) / (10000 * SECONDS_IN_YEAR); //50%
 
     // During bootsrap period redemptions are not allowed
-    // uint256 public constant BOOTSTRAP_PERIOD = 14 days;
-    // TODO
-    uint256 public constant BOOTSTRAP_PERIOD = 0 days;
+    uint256 public constant BOOTSTRAP_PERIOD = 14 days;
 
     /*
      * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption.

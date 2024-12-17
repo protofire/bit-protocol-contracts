@@ -1,9 +1,4 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
-import {
-  wrapEthersSigner,
-  wrapEthersProvider,
-  wrap,
-} from "@oasisprotocol/sapphire-paratime";
 
 import deployBitToken from "./dao/BitToken";
 import deployBitCore from "./core/BitCore";
@@ -28,23 +23,18 @@ import deployMultiTroveGetter from "./helpers/MultiTroveGetter";
 import deployTroveManagerGetters from "./helpers/TroveManagerGetters";
 import deployIdoTokenVesting from "./dao/IdoTokenVesting";
 import deployTokenVesting from "./dao/TokenVesting";
-// import deployLuminexFactory from "./mock/LuminexFactory";
 
 // Mocks
 import deployMockBand from "./mock/MockBand";
 import deployMockTwap from "./mock/MockTWAP";
 import deployMockLpChecker from "./mock/MockLpChecker";
-// import deployMockLpToken from "./mock/MockLpToken";
 
 const NETWORK = process.env.NETWORK;
 
 export default buildModule("CoreModule", (m) => {
   const bitCore = deployBitCore(m);
 
-  if (NETWORK !== "sapphire") {
-    // deployMockLpChecker(m);
-    // deployMockLpToken();
-    // deployLuminexFactory(m);
+  if (NETWORK === "testnet") {
     deployMockTwap(m);
     const mockBand = deployMockBand(m);
     deployPriceFeed(m, bitCore, mockBand);
@@ -53,7 +43,7 @@ export default buildModule("CoreModule", (m) => {
   }
 
   const bitToken = deployBitToken(m, bitCore);
-  const feeReceiver = deployFeeReceiver(m, bitCore);
+  deployFeeReceiver(m, bitCore);
   const gasPool = deployGasPool(m);
   const debtToken = deployDebtToken(m, bitCore);
   const factory = deployFactory(m, bitCore, debtToken);
@@ -70,7 +60,7 @@ export default buildModule("CoreModule", (m) => {
     incentiveVoting,
     stabilityPool
   );
-  const troveManager = deployTroveManager(
+  deployTroveManager(
     m,
     bitCore,
     gasPool,
@@ -79,21 +69,18 @@ export default buildModule("CoreModule", (m) => {
     vault,
     liqManager
   );
-  const sortedTroves = deploySortedTroves(m);
-  const emissionSchedule = deployEmissionSchedule(
-    m,
-    bitCore,
-    incentiveVoting,
-    vault
-  );
-  const boostCalculator = deployBoostCalculator(m, bitCore, tokenLocker);
+  deploySortedTroves(m);
+  deployEmissionSchedule(m, bitCore, incentiveVoting, vault);
+  // deployBoostCalculator(m, bitCore, tokenLocker);
+
+  // LEAVE COMMENTED OUT FOR NOW
   // const interimAdmin = deployInterimAdmin(m, bitCore);
 
-  const multiCollHintHelpers = deployMultiCollHintHelpers(m, borrowerOps);
-  const multiTroveGetter = deployMultiTroveGetter(m);
-  const troveManagerGetters = deployTroveManagerGetters(m, factory);
-  const idoTokenVesting = deployIdoTokenVesting(m, bitCore, vault, bitToken);
-  deployTokenVesting(m, bitCore, vault, bitToken);
+  deployMultiCollHintHelpers(m, borrowerOps);
+  deployMultiTroveGetter(m);
+  deployTroveManagerGetters(m, factory);
+  // deployIdoTokenVesting(m, bitCore, vault, bitToken);
+  // deployTokenVesting(m, bitCore, vault, bitToken);
 
   return { bitCore };
 });

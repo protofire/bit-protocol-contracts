@@ -842,7 +842,8 @@ contract StabilityPool is BitOwnable, SystemStart {
         address recipient,
         uint256[] calldata collateralIndexes
     ) public virtual {
-        _accrueDepositorCollateralGain(msg.sender);
+        // Update the depositor's snapshots, and accrue any gains since the last snapshots were taken
+        _claimReward(msg.sender);
 
         uint256 loopEnd = collateralIndexes.length;
         uint256[] memory collateralGains = new uint256[](

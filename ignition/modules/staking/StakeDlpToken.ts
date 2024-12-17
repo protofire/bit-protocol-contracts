@@ -10,11 +10,11 @@ export default (
   bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   oracle: string
 ) => {
-  const depositBitLp = m.contract(
-    "DepositBitLp",
+  const stakeDlpToken = m.contract(
+    "StakeDlpToken",
     [bitToken, lpToken, vault, trove, bitCore, oracle],
     { after: [bitToken, vault, trove, bitCore] }
   );
 
-  return depositBitLp;
+  return stakeDlpToken;
 };

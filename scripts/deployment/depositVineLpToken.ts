@@ -2,15 +2,15 @@ import { ethers } from "hardhat";
 
 const { contracts } = require("../config/index.ts");
 
-const lpToken = "0x1FFdE6D469DAA9Ddb49922357cc2B441DeF4E019";
-const trove = "0x44fa3A93b5df7033D97c889De322512ac460284E";
-const lpOracle = "0x0A078D570bD8DBD1c452ad8e576Fa243eDD67b17";
+const lpToken = "0x15F2b1Dc4c427A8a022ba1Bb457fcbb1172E1855";
+const trove = "0x6E9Efb78343aa7302E1035E0b0F84711f45fAC68";
+const lpOracle = "0xB1066f2B3E8fc94051295D9A63330C2bd31C00a5";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
 
   const depositBitLpToken = await ethers.getContractFactory(
-    "DepositBitLpToken",
+    "StakeDlpToken",
     deployer
   );
   const contract = await depositBitLpToken.deploy(
@@ -23,11 +23,11 @@ async function main() {
   );
   await contract.waitForDeployment();
 
-  console.log("DepositBitLpToken deployed to:", await contract.getAddress());
+  console.log("StakeDlpToken deployed to:", await contract.getAddress());
 }
 
 main()
-  .then(() => console.log("DepositBitLpToken deployed"))
+  .then(() => console.log("StakeDlpToken deployed"))
   .catch((error) => {
     console.error(error);
     process.exit(1);

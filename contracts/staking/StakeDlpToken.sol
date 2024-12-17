@@ -14,9 +14,9 @@ interface ITrove {
 }
 
 /**
-    @title Bit Deposit Wrapper
+    @title Bit Dynamic LP Stake
  */
-contract DepositBitLpToken is BitOwnable {
+contract StakeDlpToken is BitOwnable {
     IERC20 public immutable bit;
     IBitVault public immutable vault;
     IBitLPOracle lpOracle;

@@ -7,9 +7,9 @@ import "../interfaces/IVault.sol";
 import "../dependencies/BitOwnable.sol";
 
 /**
-    @title Bit Deposit Wrapper
+    @title Bit LP Stake
  */
-contract DepositToken is BitOwnable {
+contract StakeLPToken is BitOwnable {
     IERC20 public immutable bit;
     IBitVault public immutable vault;
 
