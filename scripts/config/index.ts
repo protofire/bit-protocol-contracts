@@ -6,7 +6,7 @@ const modulePreffix = "CoreModule#";
 
 const priceFeed = `${modulePreffix}PriceFeed`;
 const feeReceiver = `${modulePreffix}FeeReceiver`;
-const vineCore = `${modulePreffix}VineCore`;
+const bitCore = `${modulePreffix}BitCore`;
 const debtToken = `${modulePreffix}DebtToken`;
 const factory = `${modulePreffix}Factory`;
 const gasPool = `${modulePreffix}GasPool`;
@@ -15,12 +15,12 @@ const borrowOps = `${modulePreffix}BorrowerOperations`;
 const sortedTroves = `${modulePreffix}SortedTroves`;
 const troveManager = `${modulePreffix}TroveManager`;
 const liquidationManager = `${modulePreffix}LiquidationManager`;
-const vineVault = `${modulePreffix}VineVault`;
+const bitVault = `${modulePreffix}BitVault`;
 const incentiveVoting = `${modulePreffix}IncentiveVoting`;
 const tokenLocker = `${modulePreffix}TokenLocker`;
 const emissionSchedule = `${modulePreffix}EmissionSchedule`;
 const boostCalculator = `${modulePreffix}BoostCalculator`;
-const vineToken = `${modulePreffix}VineToken`;
+const bitToken = `${modulePreffix}BitToken`;
 const tokenVesting = `${modulePreffix}TokenVesting`;
 const interimAdmin = `${modulePreffix}InterimAdmin`;
 const lpPriceOracle = `${modulePreffix}LPPriceOracle`;
@@ -28,6 +28,7 @@ const idoTokenVesting = `${modulePreffix}IDOTokenVesting`;
 const multiTroveGetter = `${modulePreffix}MultiTroveGetter`;
 const multiCollateralHintHelpers = `${modulePreffix}MultiCollateralHintHelpers`;
 const troveManagerGetters = `${modulePreffix}TroveManagerGetters`;
+const mockLpChecker = `${modulePreffix}LpChecker`;
 
 const contracts = {
   PriceFeed: {
@@ -36,8 +37,8 @@ const contracts = {
   FeeReceiver: {
     address: addresses[feeReceiver],
   },
-  VineCore: {
-    address: addresses[vineCore],
+  BitCore: {
+    address: addresses[bitCore],
   },
   DebtToken: {
     address: addresses[debtToken],
@@ -63,8 +64,8 @@ const contracts = {
   LiquidationManager: {
     address: addresses[liquidationManager],
   },
-  VineVault: {
-    address: addresses[vineVault],
+  BitVault: {
+    address: addresses[bitVault],
   },
   IncentiveVoting: {
     address: addresses[incentiveVoting],
@@ -78,8 +79,8 @@ const contracts = {
   BoostCalculator: {
     address: addresses[boostCalculator],
   },
-  VineToken: {
-    address: addresses[vineToken],
+  BitToken: {
+    address: addresses[bitToken],
   },
   TokenVesting: {
     address: addresses[tokenVesting],
@@ -98,6 +99,9 @@ const contracts = {
   },
   TroveManagerGetters: {
     address: addresses[troveManagerGetters],
+  },
+  LpChecker: {
+    address: addresses[mockLpChecker],
   },
   // InterimAdmin: {
   //   address: addresses[interimAdmin],

@@ -6,7 +6,7 @@ import "../../interfaces/ITroveManager.sol";
 import "../../interfaces/ISortedTroves.sol";
 import "../../interfaces/IFactory.sol";
 
-/*  Helper contract for grabbing Trove data for the front end. Not part of the core Vine system. */
+/*  Helper contract for grabbing Trove data for the front end. Not part of the core Bit system. */
 contract MultiTroveGetter {
     struct CombinedTroveData {
         address owner;
@@ -48,9 +48,19 @@ contract MultiTroveGetter {
             }
 
             if (descend) {
-                _troves = _getMultipleSortedTrovesFromHead(troveManager, sortedTroves, startIdx, _count);
+                _troves = _getMultipleSortedTrovesFromHead(
+                    troveManager,
+                    sortedTroves,
+                    startIdx,
+                    _count
+                );
             } else {
-                _troves = _getMultipleSortedTrovesFromTail(troveManager, sortedTroves, startIdx, _count);
+                _troves = _getMultipleSortedTrovesFromTail(
+                    troveManager,
+                    sortedTroves,
+                    startIdx,
+                    _count
+                );
             }
         }
     }
@@ -82,9 +92,10 @@ contract MultiTroveGetter {
                 ,
 
             ) = troveManager.getTrove(currentTroveowner);
-            (_troves[idx].snapshotCollateral, _troves[idx].snapshotDebt) = troveManager.rewardSnapshots(
-                currentTroveowner
-            );
+            (
+                _troves[idx].snapshotCollateral,
+                _troves[idx].snapshotDebt
+            ) = troveManager.rewardSnapshots(currentTroveowner);
 
             currentTroveowner = sortedTroves.getNext(currentTroveowner);
         }
@@ -117,9 +128,10 @@ contract MultiTroveGetter {
                 ,
 
             ) = troveManager.getTrove(currentTroveowner);
-            (_troves[idx].snapshotCollateral, _troves[idx].snapshotDebt) = troveManager.rewardSnapshots(
-                currentTroveowner
-            );
+            (
+                _troves[idx].snapshotCollateral,
+                _troves[idx].snapshotDebt
+            ) = troveManager.rewardSnapshots(currentTroveowner);
 
             currentTroveowner = sortedTroves.getPrev(currentTroveowner);
         }

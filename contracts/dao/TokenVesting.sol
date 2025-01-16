@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.19;
 
-import "../dependencies/VineOwnable.sol";
+import "../dependencies/BitOwnable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract TokenVesting is VineOwnable {
+contract TokenVesting is BitOwnable {
     address public immutable vault;
-    IERC20 public immutable VINE;
+    IERC20 public immutable bit;
 
     mapping(address => UnlockingRules) public UnlockingInfo;
 
@@ -21,9 +21,13 @@ contract TokenVesting is VineOwnable {
 
     event Vest(address indexed _addr, address to, uint256 _amount);
 
-    constructor(address _vineCore, address _vault, IERC20 _VINE) VineOwnable(_vineCore) {
+    constructor(
+        address _bitCore,
+        address _vault,
+        IERC20 _bit
+    ) BitOwnable(_bitCore) {
         vault = _vault;
-        VINE = _VINE;
+        bit = _bit;
     }
 
     struct UnlockingRules {
@@ -94,7 +98,7 @@ contract TokenVesting is VineOwnable {
             } else {
                 UnlockingInfo[msg.sender].lastUnlockingTime = block.timestamp;
             }
-            VINE.transferFrom(vault, to, unlockableAmount);
+            bit.transferFrom(vault, to, unlockableAmount);
             emit Vest(msg.sender, to, unlockableAmount);
         }
     }

@@ -3,11 +3,11 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   gasPool: NamedArtifactContractDeploymentFuture<"GasPool">,
   debtToken: NamedArtifactContractDeploymentFuture<"DebtToken">,
   borrowerOps: NamedArtifactContractDeploymentFuture<"BorrowerOperations">,
-  vault: NamedArtifactContractDeploymentFuture<"VineVault">,
+  vault: NamedArtifactContractDeploymentFuture<"BitVault">,
   liqManager: NamedArtifactContractDeploymentFuture<"LiquidationManager">
 ) => {
   const gasCompensation = m.getParameter(
@@ -18,7 +18,7 @@ export default (
   const troveManager = m.contract(
     "TroveManager",
     [
-      vineCore,
+      bitCore,
       gasPool,
       debtToken,
       borrowerOps,
@@ -26,7 +26,7 @@ export default (
       liqManager,
       gasCompensation,
     ],
-    { after: [vineCore, gasPool, debtToken, borrowerOps, vault, liqManager] }
+    { after: [bitCore, gasPool, debtToken, borrowerOps, vault, liqManager] }
   );
 
   return troveManager;

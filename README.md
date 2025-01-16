@@ -1,1 +1,1 @@
-# Bit Protocol Contracts
+# Bit Money Deployment Scripts

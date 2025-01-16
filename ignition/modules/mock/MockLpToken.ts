@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 
-export default async () => {
+async function main() {
   const [deployer] = await ethers.getSigners();
   console.log(
     "Deploying the MockLpToken contract with the account:",
@@ -11,6 +11,12 @@ export default async () => {
   const mockLpToken = await MockLpToken.deploy();
   await mockLpToken.waitForDeployment();
 
-  console.log("MockLpToken deployed to:", mockLpToken.getAddress());
-  return mockLpToken;
-};
+  console.log("MockLpToken deployed to:", await mockLpToken.getAddress());
+}
+
+main()
+  .then(() => console.log("Mock Lp Token deployed"))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

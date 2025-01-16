@@ -3,10 +3,10 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">
 ) => {
-  const name = m.getParameter("name", "Bit USD");
-  const symbol = m.getParameter("symbol", "bitUSD");
+  const name = m.getParameter("name", "BitUSDs");
+  const symbol = m.getParameter("symbol", "BitUSDs");
   const gasCompensation = m.getParameter(
     "gasCompensation",
     "1000000000000000000"
@@ -14,8 +14,8 @@ export default (
 
   const debtToken = m.contract(
     "DebtToken",
-    [name, symbol, vineCore, gasCompensation],
-    { after: [vineCore] }
+    [name, symbol, bitCore, gasCompensation],
+    { after: [bitCore] }
   );
 
   return debtToken;

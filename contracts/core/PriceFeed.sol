@@ -3,15 +3,15 @@
 pragma solidity ^0.8.19;
 import "../interfaces/IStdReference.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../dependencies/VineMath.sol";
-import "../dependencies/VineOwnable.sol";
+import "../dependencies/BitMath.sol";
+import "../dependencies/BitOwnable.sol";
 
 /**
-    @title Vine Multi Token Price Feed
+    @title Bit Multi Token Price Feed
     @notice Based on Gravita's PriceFeed:
             https://github.com/Gravita-Protocol/Gravita-SmartContracts/blob/9b69d555f3567622b0f84df8c7f1bb5cd9323573/contracts/PriceFeed.sol
  */
-contract PriceFeed is VineOwnable {
+contract PriceFeed is BitOwnable {
     struct OracleRecord {
         IStdReference bandOracle;
         string base;
@@ -67,7 +67,10 @@ contract PriceFeed is VineOwnable {
         uint32 heartbeat;
     }
 
-    constructor(address _vineCore, OracleSetup[] memory oracles) VineOwnable(_vineCore) {
+    constructor(
+        address _bitCore,
+        OracleSetup[] memory oracles
+    ) BitOwnable(_bitCore) {
         for (uint i = 0; i < oracles.length; i++) {
             OracleSetup memory o = oracles[i];
             _setOracle(o.token, o.band, o.base, o.quote, o.heartbeat);
@@ -103,7 +106,6 @@ contract PriceFeed is VineOwnable {
     ) internal {
         if (_heartbeat > 86400) revert PriceFeed__HeartbeatOutOfBoundsError();
         IStdReference newFeed = IStdReference(_bandOracle);
-        
 
         OracleRecord memory record = OracleRecord({
             bandOracle: newFeed,
@@ -149,19 +151,27 @@ contract PriceFeed is VineOwnable {
                 oracle
             );
 
-            if (!_isFeedWorking(currResponse, oracle.heartbeat)) {
-                revert PriceFeed__InvalidFeedResponseError(_token);
+            if (currResponse.success == true) {
+                price = _processFeedResponses(
+                    _token,
+                    oracle,
+                    currResponse,
+                    priceRecord
+                );
             } else {
-                price = _processFeedResponses(_token, oracle, currResponse, priceRecord);
-                priceRecord.lastUpdated = uint32(block.timestamp);
-                priceRecords[_token] = priceRecord;
+                if (!_isFeedWorking(currResponse, oracle.heartbeat)) {
+                    revert PriceFeed__InvalidFeedResponseError(_token);
+                } else {
+                    priceRecord.lastUpdated = uint32(block.timestamp);
+                    priceRecords[_token] = priceRecord;
+                }
             }
         }
 
         return price;
     }
 
-    function loadPrice(address _token) public view returns(uint256) {
+    function loadPrice(address _token) public view returns (uint256) {
         OracleRecord memory oracle = oracleRecords[_token];
         FeedResponse memory currResponse = _fetchCurrentFeedResponse(oracle);
         return currResponse.rate;
@@ -175,7 +185,11 @@ contract PriceFeed is VineOwnable {
         FeedResponse memory _currResponse,
         PriceRecord memory priceRecord
     ) internal returns (uint256) {
-        bool isValidResponse = _isFeedWorking(_currResponse, oracle.heartbeat) &&
+        bool isValidResponse = _isFeedWorking(
+            _currResponse,
+            oracle.heartbeat
+        ) &&
+            !_isPriceStale(_currResponse.lastUpdatedBase, oracle.heartbeat) &&
             !_isPriceChangeAboveMaxDeviation(_currResponse, priceRecord);
         if (isValidResponse) {
             uint256 price = uint256(_currResponse.rate);
@@ -195,18 +209,30 @@ contract PriceFeed is VineOwnable {
         }
     }
 
-    function _isPriceStale(uint256 _priceTimestamp, uint256 _heartbeat) internal view returns (bool) {
-        return _priceTimestamp > 0 && block.timestamp - _priceTimestamp > _heartbeat + RESPONSE_TIMEOUT_BUFFER;
+    function _isPriceStale(
+        uint256 _priceTimestamp,
+        uint256 _heartbeat
+    ) internal view returns (bool) {
+        return
+            _priceTimestamp > 0 &&
+            block.timestamp - _priceTimestamp >
+            _heartbeat + RESPONSE_TIMEOUT_BUFFER;
     }
 
     function _isFeedWorking(
         FeedResponse memory _currentResponse,
         uint256 _heartbeat
     ) internal view returns (bool) {
-        return _currentResponse.success == true && _isValidResponse(_currentResponse) && !_isPriceStale(_currentResponse.lastUpdatedBase, _heartbeat) && !_isPriceStale(_currentResponse.lastUpdatedQuote, _heartbeat);
+        return
+            _currentResponse.success == true &&
+            _isValidResponse(_currentResponse) &&
+            !_isPriceStale(_currentResponse.lastUpdatedBase, _heartbeat) &&
+            !_isPriceStale(_currentResponse.lastUpdatedQuote, _heartbeat);
     }
 
-    function _isValidResponse(FeedResponse memory _response) internal view returns (bool) {
+    function _isValidResponse(
+        FeedResponse memory _response
+    ) internal view returns (bool) {
         return
             (_response.rate != 0) &&
             (_response.lastUpdatedBase != 0) &&
@@ -222,25 +248,38 @@ contract PriceFeed is VineOwnable {
         uint256 currentPrice = uint256(_currResponse.rate);
         uint256 prevPrice = uint256(priceRecord.price);
 
-        uint256 minPrice = VineMath._min(currentPrice, prevPrice);
-        uint256 maxPrice = VineMath._max(currentPrice, prevPrice);
+        uint256 minPrice = BitMath._min(currentPrice, prevPrice);
+        uint256 maxPrice = BitMath._max(currentPrice, prevPrice);
 
         /*
          * Use the larger price as the denominator:
          * - If price decreased, the percentage deviation is in relation to the previous price.
          * - If price increased, the percentage deviation is in relation to the current price.
          */
-        uint256 percentDeviation = ((maxPrice - minPrice) * VineMath.DECIMAL_PRECISION) / maxPrice;
+        uint256 percentDeviation = ((maxPrice - minPrice) *
+            BitMath.DECIMAL_PRECISION) / maxPrice;
 
         return percentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND;
     }
 
-    function _updateFeedStatus(address _token, OracleRecord memory _oracle, bool _isWorking) internal {
+    function _updateFeedStatus(
+        address _token,
+        OracleRecord memory _oracle,
+        bool _isWorking
+    ) internal {
         oracleRecords[_token].isFeedWorking = _isWorking;
-        emit PriceFeedStatusUpdated(_token, address(_oracle.bandOracle), _isWorking);
+        emit PriceFeedStatusUpdated(
+            _token,
+            address(_oracle.bandOracle),
+            _isWorking
+        );
     }
 
-    function _storePrice(address _token, uint256 _price, uint256 _timestamp) internal {
+    function _storePrice(
+        address _token,
+        uint256 _price,
+        uint256 _timestamp
+    ) internal {
         priceRecords[_token] = PriceRecord({
             price: uint96(_price),
             timestamp: uint32(_timestamp),
@@ -253,8 +292,9 @@ contract PriceFeed is VineOwnable {
         OracleRecord memory _oracle
     ) internal view returns (FeedResponse memory response) {
         IStdReference _priceAggregator = IStdReference(_oracle.bandOracle);
-        try _priceAggregator.getReferenceData(_oracle.base, _oracle.quote) returns (
-            IStdReference.ReferenceData memory data) {
+        try
+            _priceAggregator.getReferenceData(_oracle.base, _oracle.quote)
+        returns (IStdReference.ReferenceData memory data) {
             response.rate = data.rate;
             response.lastUpdatedBase = data.lastUpdatedBase;
             response.lastUpdatedQuote = data.lastUpdatedQuote;

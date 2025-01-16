@@ -2,28 +2,28 @@ import { ethers } from "hardhat";
 
 const { contracts } = require("../config/index.ts");
 
-const lpToken = "0x2BCD9a9Cc2a49E00cB58b9EE3855dF5bC80dfFee";
+const lpToken = "0xC682Eb99486ACDD5a896bda6bD3198FE26f78Bb6";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
 
   const depositToken = await ethers.getContractFactory(
-    "DepositToken",
+    "StakeLPToken",
     deployer
   );
   const contract = await depositToken.deploy(
-    contracts["VineToken"].address,
+    contracts["BitToken"].address,
     lpToken,
-    contracts["VineVault"].address,
-    contracts["VineCore"].address
+    contracts["BitVault"].address,
+    contracts["BitCore"].address
   );
   await contract.waitForDeployment();
 
-  console.log("DepositToken deployed to:", await contract.getAddress());
+  console.log("StakeLPToken deployed to:", await contract.getAddress());
 }
 
 main()
-  .then(() => console.log("VineCore deployed"))
+  .then(() => console.log("StakeLPToken deployed"))
   .catch((error) => {
     console.error(error);
     process.exit(1);

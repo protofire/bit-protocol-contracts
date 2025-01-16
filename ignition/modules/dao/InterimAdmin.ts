@@ -3,10 +3,10 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">
 ) => {
-  const interimAdmin = m.contract("InterimAdmin", [vineCore], {
-    after: [vineCore],
+  const interimAdmin = m.contract("InterimAdmin", [bitCore], {
+    after: [bitCore],
     from: process.env.PUBLIC_KEY,
   });
 

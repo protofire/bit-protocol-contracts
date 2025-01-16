@@ -8,8 +8,8 @@ const adminPublicAddress =
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
-  vineToken: NamedArtifactContractDeploymentFuture<"VineToken">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
+  bitToken: NamedArtifactContractDeploymentFuture<"BitToken">,
   locker: NamedArtifactContractDeploymentFuture<"TokenLocker">,
   voter: NamedArtifactContractDeploymentFuture<"IncentiveVoting">,
   stabilityPool: NamedArtifactContractDeploymentFuture<"StabilityPool">
@@ -17,9 +17,9 @@ export default (
   const manager = m.getParameter("manager", adminPublicAddress);
 
   const vault = m.contract(
-    "VineVault",
-    [vineCore, vineToken, locker, voter, stabilityPool, manager],
-    { after: [vineCore, vineToken, locker, stabilityPool, voter] }
+    "BitVault",
+    [bitCore, bitToken, locker, voter, stabilityPool, manager],
+    { after: [bitCore, bitToken, locker, stabilityPool, voter] }
   );
 
   return vault;

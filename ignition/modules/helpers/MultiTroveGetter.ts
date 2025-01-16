@@ -7,20 +7,3 @@ export default (m: IgnitionModuleBuilder) => {
 
   return multiTroveGetter;
 };
-
-// const main = async () => {
-//   const [deployer] = await ethers.getSigners();
-
-//   const troveGetter = await ethers.getContractFactory(
-//     "TroveManagerGetters",
-//     deployer
-//   );
-//   const t = await troveGetter.deploy(
-//     "0x5576141e4Ff85186AAF6433f8136b64467B88D8E"
-//   );
-//   await t.waitForDeployment();
-
-//   console.log("TroveManagerGetters deployed to:", await t.getAddress());
-// };
-
-// main();

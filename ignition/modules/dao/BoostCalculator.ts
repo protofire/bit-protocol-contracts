@@ -3,7 +3,7 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   tokenLocker: NamedArtifactContractDeploymentFuture<"TokenLocker">
 ) => {
   // TODO: make sure the value is 2
@@ -11,8 +11,8 @@ export default (
 
   const boostCalculator = m.contract(
     "BoostCalculator",
-    [vineCore, tokenLocker, graceWeeks],
-    { after: [vineCore, tokenLocker] }
+    [bitCore, tokenLocker, graceWeeks],
+    { after: [bitCore, tokenLocker] }
   );
 
   return boostCalculator;

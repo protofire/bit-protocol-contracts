@@ -14,8 +14,8 @@ async function main() {
   const signer = await hre.ethers.getSigner(adminWallet.address);
 
   const core = await hre.ethers.getContractAt(
-    "VineCore",
-    contracts["VineCore"].address,
+    "BitCore",
+    contracts["BitCore"].address,
     signer
   );
 
@@ -43,26 +43,26 @@ async function main() {
     signer
   );
 
-  const vineVault = await hre.ethers.getContractAt(
-    "VineVault",
-    contracts["VineVault"].address,
+  const bitVault = await hre.ethers.getContractAt(
+    "BitVault",
+    contracts["BitVault"].address,
     signer
   );
 
-  const vineToken = await hre.ethers.getContractAt(
-    "VineToken",
-    contracts["VineToken"].address,
+  const bitToken = await hre.ethers.getContractAt(
+    "BitToken",
+    contracts["BitToken"].address,
     signer
   );
 
-  if (NETWORK !== "sapphire") {
+  if (NETWORK === "testnet") {
     const mockBand = await hre.ethers.getContractAt(
       "LPPriceOracle",
       contracts["LPPriceOracle"].address,
       signer
     );
 
-    await mockBand.setPrice("60418000000000000000000");
+    await mockBand.setPrice("1000000000000000000");
   }
 
   const tokenLocker = await hre.ethers.getContractAt(
@@ -71,16 +71,18 @@ async function main() {
     signer
   );
 
+  console.log("Core configuration...");
   // CORE CONFIG
   await core.setFeeReceiver(contracts["FeeReceiver"].address);
   await core.setPriceFeed(contracts["PriceFeed"].address);
 
-  // VineToken config
-  await vineToken.setInitialParameters(
-    contracts["VineVault"].address,
+  console.log("BitToken configuration...");
+  // BitToken config
+  await bitToken.setInitialParameters(
+    contracts["BitVault"].address,
     contracts["TokenLocker"].address
   );
-
+  console.log("DebtToken configuration...");
   // DebtToken config
   await debtToken.setInitialParameters(
     contracts["Factory"].address,
@@ -88,9 +90,9 @@ async function main() {
     contracts["StabilityPool"].address,
     contracts["BorrowerOperations"].address
   );
+  await debtToken.setSecrecy(true);
 
-  // await debtToken.setSecrecy(true);
-
+  console.log("Factory configuration...");
   // FACTORY CONFIG
   await factory.setInitialParameters(
     contracts["StabilityPool"].address,
@@ -100,8 +102,9 @@ async function main() {
     contracts["LiquidationManager"].address
   );
 
+  console.log("Deploying Trove Manager...");
   const tx = await factory.deployNewInstance(
-    "0xB5EA3151e1edED183CC9571916B435b6B188D508",
+    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
     contracts["PriceFeed"].address,
     addressZero, // address(0) to use the default
     addressZero, // address(0) to use the default
@@ -112,11 +115,10 @@ async function main() {
       borrowingFeeFloor: "5000000000000000",
       maxBorrowingFee: "50000000000000000",
       interestRateInBps: "100",
-      maxDebt: "10000000000000000000000000000",
+      maxDebt: "100000000000000000000000000000",
       MCR: "1500000000000000000",
     }
   );
-
   await tx.wait();
 
   const troveManagerDeployment = await factory.troveManagers(0);
@@ -127,8 +129,11 @@ async function main() {
     signer
   );
 
+  console.log("Trove Manager deployed at:", troveManagerDeployment);
+
   const sortedTrove = await troveManager.sortedTroves();
 
+  console.log("Trove Manager configuration...");
   // TROVE MANAGER/Debt Token SET LOOKERS
   await troveManager.setLookers(
     [
@@ -141,53 +146,69 @@ async function main() {
     [true, true, true, true, true]
   );
 
-  await debtToken.setLookers([troveManagerDeployment], [true]);
+  console.log("Setting trove manager as looker for DebtToken...");
+  await debtToken.setLookers(
+    [troveManagerDeployment],
+    // [troveManagerDeployment, troveManagerDeploy2],
+    [true, true]
+  );
 
-  // // StabilityPool config
+  console.log("StabilityPool configuration...");
+  // StabilityPool config
   await stabilityPool.setInitialParameters(
-    contracts["VineVault"].address,
+    contracts["BitVault"].address,
     contracts["LiquidationManager"].address
   );
 
-  // // INCENTIVE VOTING CONFIG
+  console.log("Incentive Voting configuration...");
+  // INCENTIVE VOTING CONFIG
   await incentiveVoting.setInitialParameters(
     contracts["TokenLocker"].address,
-    contracts["VineVault"].address
+    contracts["BitVault"].address
   );
 
-  // VineVault config
-  await vineVault.setInitialParameters(
-    contracts["EmissionSchedule"].address,
-    contracts["BoostCalculator"].address,
-    "100000000000000000000000000",
-    "19",
-    [],
-    [
-      {
-        receiver: adminWallet.address,
-        amount: "1700000000000000000000000",
-      },
-      {
-        receiver: contracts["IDOTokenVesting"].address,
-        amount: "5300000000000000000000000",
-      },
-      {
-        receiver: contracts["TokenVesting"].address,
-        amount: "38000000000000000000000000",
-      },
-    ]
-  );
+  // console.log("BitVault configuration...");
+  // // BitVault config
+  // await bitVault.setInitialParameters(
+  //   contracts["EmissionSchedule"].address,
+  //   contracts["BoostCalculator"].address,
+  //   "100000000000000000000000000",
+  //   "26",
+  //   [],
+  //   [
+  //     {
+  //       receiver: adminWallet.address,
+  //       amount: "1700000000000000000000000",
+  //     },
+  //     {
+  //       receiver: contracts["IDOTokenVesting"].address,
+  //       amount: "5300000000000000000000000",
+  //     },
+  //     {
+  //       receiver: contracts["TokenVesting"].address,
+  //       amount: "38000000000000000000000000",
+  //     },
+  //   ]
+  // );
 
-  await vineToken.transferFrom(
-    contracts["VineVault"].address,
-    adminWallet.address,
-    "1510000000000000000000000"
-  );
+  // console.log("BitVault transfering BitToken to developers");
+  // await bitToken.transferFrom(
+  //   contracts["BitVault"].address,
+  //   adminWallet.address,
+  //   "1510000000000000000000000"
+  // );
 
+  // console.log("Registering trove manager as receiver");
+  // REGISTER EMISSIONS RECEIVERS
+  // await bitVault.registerReceiver(troveManagerDeployment, 2);
+
+  // console.log("TokenLocker setAllowPenaltyWithdrawAfter");
+  // 7 days TODO: make this timestamp dynamic
+  // await tokenLocker.setAllowPenaltyWithdrawAfter(1729882414);
+
+  // console.log("TokenLocker setPenaltyWithdrawalsEnabled");
   // TOKEN LOCKER CONFIG
   // await tokenLocker.setPenaltyWithdrawalsEnabled(true);
-  // 7 days
-  // await tokenLocker.setAllowPenaltyWithdrawAfter(0);
 }
 
 main()

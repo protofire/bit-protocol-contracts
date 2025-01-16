@@ -3,23 +3,27 @@ import { IgnitionModuleBuilder } from "@nomicfoundation/ignition-core/dist/src/t
 
 export default (
   m: IgnitionModuleBuilder,
-  vineCore: NamedArtifactContractDeploymentFuture<"VineCore">,
+  bitCore: NamedArtifactContractDeploymentFuture<"BitCore">,
   voter: NamedArtifactContractDeploymentFuture<"IncentiveVoting">,
-  vault: NamedArtifactContractDeploymentFuture<"VineVault">
+  vault: NamedArtifactContractDeploymentFuture<"BitVault">
 ) => {
-  const initialLockWeeks = m.getParameter("initialLockWeeks", 19);
+  // const initialLockWeeks = m.getParameter("initialLockWeeks", 26);
+  // TODO
+  const initialLockWeeks = m.getParameter("initialLockWeeks", 0);
   const lockDecayWeeks = m.getParameter("lockDecayWeeks", 2);
-  const weeklyPct = m.getParameter("weeklyPct", 100);
+  const weeklyPct = m.getParameter("weeklyPct", 140);
   const scheduledWeeklyPct = m.getParameter("scheduledWeeklyPct", [
     [104, 40],
     [52, 60],
     [26, 80],
+    [12, 100],
+    [4, 120],
   ]);
 
   const emissionSchedule = m.contract(
     "EmissionSchedule",
     [
-      vineCore,
+      bitCore,
       voter,
       vault,
       initialLockWeeks,
@@ -27,7 +31,7 @@ export default (
       weeklyPct,
       scheduledWeeklyPct,
     ],
-    { after: [vineCore, voter, vault] }
+    { after: [bitCore, voter, vault] }
   );
 
   return emissionSchedule;

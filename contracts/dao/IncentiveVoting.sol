@@ -7,10 +7,10 @@ import "../dependencies/SystemStart.sol";
 import "../interfaces/ITokenLocker.sol";
 
 /**
-    @title Vine Incentive Voting
-    @notice Users with VINE balances locked in `TokenLocker` may register their
+    @title Bit Incentive Voting
+    @notice Users with bit balances locked in `TokenLocker` may register their
             lock weights in this contract, and use this weight to vote on where
-            new VINE emissions will be released in the following week.
+            new bit emissions will be released in the following week.
 
             Conceptually, incentive voting functions similarly to Curve's gauge weight voting.
  */
@@ -79,14 +79,21 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
     // vote points for the current call, for a complete list of an account's votes
     // you must join all instances of this event that fired more recently than the
     // latest `ClearedVotes` for the the same account.
-    event NewVotes(address indexed account, uint256 indexed week, Vote[] newVotes, uint256 totalPointsUsed);
+    event NewVotes(
+        address indexed account,
+        uint256 indexed week,
+        Vote[] newVotes,
+        uint256 totalPointsUsed
+    );
     // emitted each time the votes for `account` are cleared
     event ClearedVotes(address indexed account, uint256 indexed week);
 
-    constructor(address _vineCore) SystemStart(_vineCore) {
-    }
+    constructor(address _bitCore) SystemStart(_bitCore) {}
 
-    function setInitialParameters(ITokenLocker _tokenLocker, address _vault) external {
+    function setInitialParameters(
+        ITokenLocker _tokenLocker,
+        address _vault
+    ) external {
         require(vault == address(0) && _vault != address(0));
         vault = _vault;
         tokenLocker = _tokenLocker;
@@ -95,15 +102,21 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
     function getAccountRegisteredLocks(
         address account
     ) external view returns (uint256 frozenWeight, LockData[] memory lockData) {
-        return (accountLockData[account].frozenWeight, _getAccountLocks(account));
+        return (
+            accountLockData[account].frozenWeight,
+            _getAccountLocks(account)
+        );
     }
 
-    function getAccountCurrentVotes(address account) public view returns (Vote[] memory votes) {
+    function getAccountCurrentVotes(
+        address account
+    ) public view returns (Vote[] memory votes) {
         votes = new Vote[](accountLockData[account].voteLength);
-        uint16[2][MAX_POINTS] storage storedVotes = accountLockData[account].activeVotes;
+        uint16[2][MAX_POINTS] storage storedVotes = accountLockData[account]
+            .activeVotes;
         uint256 length = votes.length;
         for (uint256 i = 0; i < length; i++) {
-            votes[i] = Vote({ id: storedVotes[i][0], points: storedVotes[i][1] });
+            votes[i] = Vote({id: storedVotes[i][0], points: storedVotes[i][1]});
         }
         return votes;
     }
@@ -112,7 +125,10 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
         return getReceiverWeightAt(idx, getWeek());
     }
 
-    function getReceiverWeightAt(uint256 idx, uint256 week) public view returns (uint256) {
+    function getReceiverWeightAt(
+        uint256 idx,
+        uint256 week
+    ) public view returns (uint256) {
         if (idx >= receiverCount) return 0;
         uint256 rate = receiverDecayRate[idx];
         uint256 updatedWeek = receiverUpdatedWeek[idx];
@@ -198,8 +214,11 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
 
         return weight;
     }
-    
-    function getReceiverVotePct(uint256 id, uint256 week) external returns (uint256) {
+
+    function getReceiverVotePct(
+        uint256 id,
+        uint256 week
+    ) external returns (uint256) {
         week -= 1;
         getReceiverWeightWrite(id);
         getTotalWeightWrite();
@@ -226,7 +245,10 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
                         more expensive it will be to vote. Accounts with many active
                         locks may wish to skip smaller locks to reduce gas costs.
      */
-    function registerAccountWeight(address account, uint256 minWeeks) external callerOrDelegated(account) {
+    function registerAccountWeight(
+        address account,
+        uint256 minWeeks
+    ) external callerOrDelegated(account) {
         AccountData storage accountData = accountLockData[account];
         Vote[] memory existingVotes;
 
@@ -234,7 +256,11 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
         // weights prior to updating the registered account weights
         if (accountData.voteLength > 0) {
             existingVotes = getAccountCurrentVotes(account);
-            _removeVoteWeights(account, existingVotes, accountData.frozenWeight);
+            _removeVoteWeights(
+                account,
+                existingVotes,
+                accountData.frozenWeight
+            );
         }
 
         // get updated account lock weights and store locally
@@ -261,7 +287,11 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
         // if account has an active vote, clear the recorded vote
         // weights prior to updating the registered account weights
         if (accountData.voteLength > 0) {
-            _removeVoteWeights(account, getAccountCurrentVotes(account), accountData.frozenWeight);
+            _removeVoteWeights(
+                account,
+                getAccountCurrentVotes(account),
+                accountData.frozenWeight
+            );
             emit ClearedVotes(account, getWeek());
         }
 
@@ -288,16 +318,27 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
                              prior to recording the new votes. If false, new
                              votes are added in addition to previous votes.
      */
-    function vote(address account, Vote[] calldata votes, bool clearPrevious) external callerOrDelegated(account) {
+    function vote(
+        address account,
+        Vote[] calldata votes,
+        bool clearPrevious
+    ) external callerOrDelegated(account) {
         AccountData storage accountData = accountLockData[account];
         uint256 frozenWeight = accountData.frozenWeight;
-        require(frozenWeight > 0 || accountData.lockLength > 0, "No registered weight");
+        require(
+            frozenWeight > 0 || accountData.lockLength > 0,
+            "No registered weight"
+        );
         uint256 points;
         uint256 offset;
 
         // optionally clear previous votes
         if (clearPrevious) {
-            _removeVoteWeights(account, getAccountCurrentVotes(account), frozenWeight);
+            _removeVoteWeights(
+                account,
+                getAccountCurrentVotes(account),
+                frozenWeight
+            );
             emit ClearedVotes(account, getWeek());
         } else {
             points = accountData.points;
@@ -316,7 +357,11 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
     function clearVote(address account) external callerOrDelegated(account) {
         AccountData storage accountData = accountLockData[account];
         uint256 frozenWeight = accountData.frozenWeight;
-        _removeVoteWeights(account, getAccountCurrentVotes(account), frozenWeight);
+        _removeVoteWeights(
+            account,
+            getAccountCurrentVotes(account),
+            frozenWeight
+        );
         accountData.voteLength = 0;
         accountData.points = 0;
 
@@ -330,7 +375,9 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
      */
     function clearRegisteredWeight(address account) external returns (bool) {
         require(
-            msg.sender == account || msg.sender == address(tokenLocker) || isApprovedDelegate[account][msg.sender],
+            msg.sender == account ||
+                msg.sender == address(tokenLocker) ||
+                isApprovedDelegate[account][msg.sender],
             "Delegate not approved"
         );
 
@@ -340,7 +387,11 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
         uint256 frozenWeight = accountData.frozenWeight;
         if (length > 0 || frozenWeight > 0) {
             if (accountData.voteLength > 0) {
-                _removeVoteWeights(account, getAccountCurrentVotes(account), frozenWeight);
+                _removeVoteWeights(
+                    account,
+                    getAccountCurrentVotes(account),
+                    frozenWeight
+                );
                 accountData.voteLength = 0;
                 accountData.points = 0;
                 emit ClearedVotes(account, week);
@@ -349,7 +400,12 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
             if (length > 0) accountData.lockLength = 0;
             else accountData.frozenWeight = 0;
 
-            emit AccountWeightRegistered(account, week, 0, new ITokenLocker.LockData[](0));
+            emit AccountWeightRegistered(
+                account,
+                week,
+                0,
+                new ITokenLocker.LockData[](0)
+            );
         }
 
         return true;
@@ -395,8 +451,12 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
                 }
             }
 
-            ITokenLocker.LockData[] memory lockData = new ITokenLocker.LockData[](1);
-            lockData[0] = ITokenLocker.LockData({ amount: amount, weeksToUnlock: MAX_LOCK_WEEKS });
+            ITokenLocker.LockData[]
+                memory lockData = new ITokenLocker.LockData[](1);
+            lockData[0] = ITokenLocker.LockData({
+                amount: amount,
+                weeksToUnlock: MAX_LOCK_WEEKS
+            });
             emit AccountWeightRegistered(account, week, 0, lockData);
         }
         return true;
@@ -406,12 +466,16 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
         @dev Get the current registered lock weights for `account`, as an array
              of [(amount, weeks to unlock)] sorted by weeks-to-unlock descending.
      */
-    function _getAccountLocks(address account) internal view returns (LockData[] memory lockData) {
+    function _getAccountLocks(
+        address account
+    ) internal view returns (LockData[] memory lockData) {
         AccountData storage accountData = accountLockData[account];
 
         uint256 length = accountData.lockLength;
         uint256 systemWeek = getWeek();
-        uint256 accountWeek = accountData.frozenWeight > 0 ? systemWeek : accountData.week;
+        uint256 accountWeek = accountData.frozenWeight > 0
+            ? systemWeek
+            : accountData.week;
         uint8[MAX_LOCK_WEEKS] storage weeksToUnlock = accountData.weeksToUnlock;
         uint32[MAX_LOCK_WEEKS] storage amounts = accountData.lockedAmounts;
 
@@ -427,20 +491,24 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
             }
             uint256 remainingWeeks = unlockWeek - systemWeek;
             uint256 amount = amounts[idx];
-            lockData[idx] = LockData({ amount: amount, weeksToUnlock: remainingWeeks });
+            lockData[idx] = LockData({
+                amount: amount,
+                weeksToUnlock: remainingWeeks
+            });
         }
 
         return lockData;
     }
 
-    function _registerAccountWeight(address account, uint256 minWeeks) internal returns (uint256) {
+    function _registerAccountWeight(
+        address account,
+        uint256 minWeeks
+    ) internal returns (uint256) {
         AccountData storage accountData = accountLockData[account];
 
         // get updated account lock weights and store locally
-        (ITokenLocker.LockData[] memory lockData, uint256 frozen) = tokenLocker.getAccountActiveLocks(
-            account,
-            minWeeks
-        );
+        (ITokenLocker.LockData[] memory lockData, uint256 frozen) = tokenLocker
+            .getAccountActiveLocks(account, minWeeks);
         uint256 length = lockData.length;
         if (frozen > 0) {
             frozen *= MAX_LOCK_WEEKS;
@@ -474,7 +542,10 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
         uint16[2][MAX_POINTS] storage storedVotes = accountData.activeVotes;
         uint256 length = votes.length;
         for (uint256 i = 0; i < length; i++) {
-            storedVotes[offset + i] = [uint16(votes[i].id), uint16(votes[i].points)];
+            storedVotes[offset + i] = [
+                uint16(votes[i].id),
+                uint16(votes[i].points)
+            ];
             points += votes[i].points;
         }
         require(points <= MAX_POINTS, "Exceeded max vote points");
@@ -489,7 +560,11 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
              registered weights of `msg.sender`. Account related values are not
              adjusted, they must be handled in the calling function.
      */
-    function _addVoteWeights(address account, Vote[] memory votes, uint256 frozenWeight) internal {
+    function _addVoteWeights(
+        address account,
+        Vote[] memory votes,
+        uint256 frozenWeight
+    ) internal {
         if (votes.length > 0) {
             if (frozenWeight > 0) {
                 _addVoteWeightsFrozen(votes, frozenWeight);
@@ -504,7 +579,11 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
              registered weights of `msg.sender`. Account related values are not
              adjusted, they must be handled in the calling function.
      */
-    function _removeVoteWeights(address account, Vote[] memory votes, uint256 frozenWeight) internal {
+    function _removeVoteWeights(
+        address account,
+        Vote[] memory votes,
+        uint256 frozenWeight
+    ) internal {
         if (votes.length > 0) {
             if (frozenWeight > 0) {
                 _removeVoteWeightsFrozen(votes, frozenWeight);
@@ -515,7 +594,10 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
     }
 
     /** @dev Should not be called directly, use `_addVoteWeights` */
-    function _addVoteWeightsUnfrozen(address account, Vote[] memory votes) internal {
+    function _addVoteWeightsUnfrozen(
+        address account,
+        Vote[] memory votes
+    ) internal {
         LockData[] memory lockData = _getAccountLocks(account);
         uint256 lockLength = lockData.length;
         require(lockLength > 0, "Registered weight has expired");
@@ -534,30 +616,40 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
                 uint256 weeksToUnlock = lockData[x].weeksToUnlock;
                 uint256 amount = (lockData[x].amount * points) / MAX_POINTS;
 
-                receiverWeeklyUnlocks[id][systemWeek + weeksToUnlock] += uint32(amount);
+                receiverWeeklyUnlocks[id][systemWeek + weeksToUnlock] += uint32(
+                    amount
+                );
 
                 weeklyUnlocks[weeksToUnlock] += uint32(amount);
                 weight += amount * weeksToUnlock;
                 decayRate += amount;
             }
-            receiverWeeklyWeights[id][systemWeek] = uint40(getReceiverWeightWrite(id) + weight);
+            receiverWeeklyWeights[id][systemWeek] = uint40(
+                getReceiverWeightWrite(id) + weight
+            );
             receiverDecayRate[id] += uint32(decayRate);
 
             totalWeight += weight;
             totalDecay += decayRate;
         }
 
-
         for (uint256 i = 0; i < lockLength; i++) {
             uint256 weeksToUnlock = lockData[i].weeksToUnlock;
-            totalWeeklyUnlocks[systemWeek + weeksToUnlock] += uint32(weeklyUnlocks[weeksToUnlock]);
+            totalWeeklyUnlocks[systemWeek + weeksToUnlock] += uint32(
+                weeklyUnlocks[weeksToUnlock]
+            );
         }
-        totalWeeklyWeights[systemWeek] = uint40(getTotalWeightWrite() + totalWeight);
+        totalWeeklyWeights[systemWeek] = uint40(
+            getTotalWeightWrite() + totalWeight
+        );
         totalDecayRate += uint32(totalDecay);
     }
 
     /** @dev Should not be called directly, use `_addVoteWeights` */
-    function _addVoteWeightsFrozen(Vote[] memory votes, uint256 frozenWeight) internal {
+    function _addVoteWeightsFrozen(
+        Vote[] memory votes,
+        uint256 frozenWeight
+    ) internal {
         uint256 systemWeek = getWeek();
         uint256 totalWeight;
         uint256 length = votes.length;
@@ -567,15 +659,22 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
 
             uint256 weight = (frozenWeight * points) / MAX_POINTS;
 
-            receiverWeeklyWeights[id][systemWeek] = uint40(getReceiverWeightWrite(id) + weight);
+            receiverWeeklyWeights[id][systemWeek] = uint40(
+                getReceiverWeightWrite(id) + weight
+            );
             totalWeight += weight;
         }
 
-        totalWeeklyWeights[systemWeek] = uint40(getTotalWeightWrite() + totalWeight);
+        totalWeeklyWeights[systemWeek] = uint40(
+            getTotalWeightWrite() + totalWeight
+        );
     }
 
     /** @dev Should not be called directly, use `_removeVoteWeights` */
-    function _removeVoteWeightsUnfrozen(address account, Vote[] memory votes) internal {
+    function _removeVoteWeightsUnfrozen(
+        address account,
+        Vote[] memory votes
+    ) internal {
         LockData[] memory lockData = _getAccountLocks(account);
         uint256 lockLength = lockData.length;
 
@@ -592,13 +691,17 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
             for (uint256 x = 0; x < lockLength; x++) {
                 uint256 weeksToUnlock = lockData[x].weeksToUnlock;
                 uint256 amount = (lockData[x].amount * points) / MAX_POINTS;
-                receiverWeeklyUnlocks[id][systemWeek + weeksToUnlock] -= uint32(amount);
+                receiverWeeklyUnlocks[id][systemWeek + weeksToUnlock] -= uint32(
+                    amount
+                );
 
                 weeklyUnlocks[weeksToUnlock] += uint32(amount);
                 weight += amount * weeksToUnlock;
                 decayRate += amount;
             }
-            receiverWeeklyWeights[id][systemWeek] = uint40(getReceiverWeightWrite(id) - weight);
+            receiverWeeklyWeights[id][systemWeek] = uint40(
+                getReceiverWeightWrite(id) - weight
+            );
             receiverDecayRate[id] -= uint32(decayRate);
 
             totalWeight += weight;
@@ -607,14 +710,21 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
 
         for (uint256 i = 0; i < lockLength; i++) {
             uint256 weeksToUnlock = lockData[i].weeksToUnlock;
-            totalWeeklyUnlocks[systemWeek + weeksToUnlock] -= uint32(weeklyUnlocks[weeksToUnlock]);
+            totalWeeklyUnlocks[systemWeek + weeksToUnlock] -= uint32(
+                weeklyUnlocks[weeksToUnlock]
+            );
         }
-        totalWeeklyWeights[systemWeek] = uint40(getTotalWeightWrite() - totalWeight);
+        totalWeeklyWeights[systemWeek] = uint40(
+            getTotalWeightWrite() - totalWeight
+        );
         totalDecayRate -= uint32(totalDecay);
     }
 
     /** @dev Should not be called directly, use `_removeVoteWeights` */
-    function _removeVoteWeightsFrozen(Vote[] memory votes, uint256 frozenWeight) internal {
+    function _removeVoteWeightsFrozen(
+        Vote[] memory votes,
+        uint256 frozenWeight
+    ) internal {
         uint256 systemWeek = getWeek();
 
         uint256 totalWeight;
@@ -624,11 +734,15 @@ contract IncentiveVoting is DelegatedOps, SystemStart {
 
             uint256 weight = (frozenWeight * points) / MAX_POINTS;
 
-            receiverWeeklyWeights[id][systemWeek] = uint40(getReceiverWeightWrite(id) - weight);
+            receiverWeeklyWeights[id][systemWeek] = uint40(
+                getReceiverWeightWrite(id) - weight
+            );
 
             totalWeight += weight;
         }
 
-        totalWeeklyWeights[systemWeek] = uint40(getTotalWeightWrite() - totalWeight);
+        totalWeeklyWeights[systemWeek] = uint40(
+            getTotalWeightWrite() - totalWeight
+        );
     }
 }
