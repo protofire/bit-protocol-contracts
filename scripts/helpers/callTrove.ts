@@ -8,30 +8,6 @@ const main = async () => {
     const time = Math.floor(new Date().getTime() / 1000);
     const user = await deployer.getAddress();
 
-    // const troveMGetter = await ethers.getContractAt(
-    //   "TroveManagerGetters",
-    //   "0x94Bd7bFDCAe6Cc36455d8bf2FF9238BB1162E507",
-    //   deployer
-    // );
-
-    // const troveM = await ethers.getContractAt(
-    //   "TroveManager",
-    //   "0x44fa3A93b5df7033D97c889De322512ac460284E",
-    //   deployer
-    // );
-
-    // const checker = await ethers.getContractAt(
-    //   "LPOracle",
-    //   "0x0A078D570bD8DBD1c452ad8e576Fa243eDD67b17",
-    //   deployer
-    // );
-
-    const debtToken = await ethers.getContractAt(
-      "DebtToken",
-      "0xA14167756d9F86Aed12b472C29B257BBdD9974C2",
-      deployer
-    );
-
     // const signature = await deployer.signTypedData(
     //   {
     //     name: "BitSignature.SignIn",
@@ -67,14 +43,13 @@ const main = async () => {
     // );
     // await some.wait();
 
-    const tx = await debtToken.transfer(
-      "0x9ba704115F0ed3a431A025ffa0525fDD1D507C3c",
-      "3000000000000000000"
+    const trove = await ethers.getContractAt(
+      "TroveManager",
+      "0xC91EDf48269D0373c17718F6D281D34908a5700d",
+      deployer
     );
 
-    const a = await tx.wait();
-
-    console.log(a);
+    const troveValues = await trove.claimCollateral("0x31C2cb2cd72a0a35Bf1839a2e0d383566bf904b0")
 
     // const getEntireDebtAndColl = await troveM.getCurrentICR(
     //   // deployer.address,
@@ -82,7 +57,7 @@ const main = async () => {
     //   "1000000000000000000"
     // );
 
-    // console.log({ getEntireDebtAndColl });
+    console.log({ troveValues });
   } catch (error) {
     console.log(error);
   }

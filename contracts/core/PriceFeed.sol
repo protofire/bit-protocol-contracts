@@ -151,17 +151,20 @@ contract PriceFeed is BitOwnable {
                 oracle
             );
 
-            if (!_isFeedWorking(currResponse, oracle.heartbeat)) {
-                revert PriceFeed__InvalidFeedResponseError(_token);
-            } else {
+            if (currResponse.success == true) {
                 price = _processFeedResponses(
                     _token,
                     oracle,
                     currResponse,
                     priceRecord
                 );
-                priceRecord.lastUpdated = uint32(block.timestamp);
-                priceRecords[_token] = priceRecord;
+            } else {
+                if (!_isFeedWorking(currResponse, oracle.heartbeat)) {
+                    revert PriceFeed__InvalidFeedResponseError(_token);
+                } else {
+                    priceRecord.lastUpdated = uint32(block.timestamp);
+                    priceRecords[_token] = priceRecord;
+                }
             }
         }
 

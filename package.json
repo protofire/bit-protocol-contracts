@@ -3,6 +3,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.12",
     "@oasisprotocol/sapphire-hardhat": "^2.19.4",
     "@types/node-cron": "^3.0.11",
     "dotenv": "^16.4.5",

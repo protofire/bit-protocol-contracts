@@ -2,6 +2,7 @@ import "@oasisprotocol/sapphire-hardhat";
 import * as dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-verify";
 import { HardhatUserConfig } from "hardhat/config";
 
 dotenv.config();

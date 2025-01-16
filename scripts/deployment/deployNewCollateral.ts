@@ -2,67 +2,14 @@ import { ethers } from "hardhat";
 
 const { contracts } = require("../config/index.ts");
 
-// const priceFeed = await hre.ethers.getContractAt(
-//   "PriceFeed",
-//   contracts["PriceFeed"].address,
-//   signer
-// );
-
-// await priceFeed.setOracle(
-//   "0x1a384b3EC67372f4765C5d2cD5Fd786Beb51bc05",
-//   contracts["LPPriceOracle"].address,
-//   "PRO",
-//   "USD",
-//   86400
-// );
-// console.log("here 8");
-// const tx1 = await factory.deployNewInstance(
-//   "0x1a384b3EC67372f4765C5d2cD5Fd786Beb51bc05",
-//   contracts["PriceFeed"].address,
-//   addressZero, // address(0) to use the default
-//   addressZero, // address(0) to use the default
-//   {
-//     minuteDecayFactor: "999037758833783000",
-//     redemptionFeeFloor: "5000000000000000",
-//     maxRedemptionFee: "1000000000000000000",
-//     borrowingFeeFloor: "5000000000000000",
-//     maxBorrowingFee: "50000000000000000",
-//     interestRateInBps: "100",
-//     maxDebt: "10000000000000000000000000000",
-//     MCR: "1500000000000000000",
-//   }
-// );
-
-// await tx1.wait();
-// console.log("here 9");
-// const troveManagerDeploy2 = await factory.troveManagers(1);
-
-// const troveManager2 = await hre.ethers.getContractAt(
-//   "TroveManager",
-//   troveManagerDeploy2,
-//   signer
-// );
-
-// const sortedTrove2 = await troveManager2.sortedTroves();
-
-// await troveManager2.setLookers(
-//   [
-//     sortedTrove2,
-//     contracts["MultiTroveGetter"].address,
-//     contracts["MultiCollateralHintHelpers"].address,
-//     contracts["TroveManagerGetters"].address,
-//     contracts["LiquidationManager"].address,
-//   ],
-//   [true, true, true, true, true]
-// );
-
-// console.log("Trove Manager 2 deployed at:", troveManagerDeploy2);
-
 // ADD THE ADDRESS OF THE COLLATERAL TOKEN
-const collateralAddress = "0xCa9DdE1B0f02CDA170d05dD2F56c6cC1126AA195";
+const collateralAddress = "0x3cAbbe76Ea8B4e7a2c0a69812CBe671800379eC8";
 const addressZero = "0x0000000000000000000000000000000000000000";
+const oracleAddress = "0x89be90AA5f97ba655878e99fF46ca7D199ed1762";
+const maxDebt = "75000000000000000000000";
 // MAKE SURE TO CHANGE THIS TO THE CORRECT INDEX
-const collateralIndex = 2;
+const collateralIndex = 1;
+
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -87,8 +34,8 @@ async function main() {
 
   await priceFeed.setOracle(
     collateralAddress,
-    contracts["LPPriceOracle"].address,
-    "PROTO",
+    oracleAddress,
+    "wstROSE",
     "USD",
     86400
   );
@@ -107,7 +54,7 @@ async function main() {
       borrowingFeeFloor: "5000000000000000",
       maxBorrowingFee: "50000000000000000",
       interestRateInBps: "100",
-      maxDebt: "10000000000000000000000000000",
+      maxDebt,
       MCR: "1500000000000000000",
     }
   );
@@ -115,6 +62,11 @@ async function main() {
   await tx.wait();
 
   const troveManagerDeployment = await factory.troveManagers(collateralIndex);
+
+  if (troveManagerDeployment === addressZero) {
+    throw new Error("Trove Manager not deployed");
+  }
+
   const oldTrove = await factory.troveManagers(0);
 
   const troveManager = await ethers.getContractAt(
