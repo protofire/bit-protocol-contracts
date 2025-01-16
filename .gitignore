@@ -2,14 +2,14 @@ node_modules
 .env
 .DS_Store
 
-# Scripts / Tests (for now)
-/scripts
-/test
+# For now
+scripts
+test
+hardhat.config.ts
 
 # Hardhat files
 /cache
 /artifacts
-hardhat.config.ts
 
 # TypeChain files
 /typechain
