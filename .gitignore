@@ -14,7 +14,7 @@ hardhat.config.ts
 /typechain
 /typechain-types
 
-# solidity-coverage files
+# solidity-coverage files˙
 /coverage
 /coverage.json
 
