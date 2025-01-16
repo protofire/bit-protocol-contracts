@@ -1,5 +1,5 @@
 # Bit Protocol Contracts
 
 ## Overview
-The Bit Protocol is a Collateralized Debt Position (CDP) protocol designed to facilitate decentralized finance operations. It allows users to lock collateral in smart contracts to mint stablecoins, providing a decentralized and trustless way to leverage assets.
-
+The Bit Protocol is a Collateralized Debt Position (CDP) protocol. 
+The first privacy-focused stablecoin built on Oasis Sapphire EVM Decentralised, Confidential and Democratized.
