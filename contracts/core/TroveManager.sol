@@ -61,7 +61,7 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
 
     // Maximum interest rate must be lower than the minimum LST staking yield
     // so that over time the actual TCR becomes greater than the calculated TCR.
-    uint256 public constant MAX_INTEREST_RATE_IN_BPS = 400; // 4%
+    uint256 public constant MAX_INTEREST_RATE_IN_BPS = 10000; // 100%
     uint256 public constant SUNSETTING_INTEREST_RATE =
         (INTEREST_PRECISION * 5000) / (10000 * SECONDS_IN_YEAR); //50%
 
@@ -382,7 +382,7 @@ contract TroveManager is BitBase, BitOwnable, SystemStart {
         uint256 _MCR
     ) public {
         require(!sunsetting, "CS");
-        require(_MCR <= CCR && _MCR >= 1500000000000000000, "MCR");
+        require(_MCR <= CCR && _MCR >= 1050000000000000000, "MCR");
         if (minuteDecayFactor != 0) {
             require(msg.sender == owner(), "OO");
         }

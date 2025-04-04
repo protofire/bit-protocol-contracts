@@ -20,6 +20,7 @@
     "deploy-pools:sapphire": "NETWORK=sapphire npx hardhat run ./scripts/deployment/lpPool.ts --network sapphire"
   },
   "dependencies": {
+    "@chainlink/contracts": "^1.3.0",
     "@oasisprotocol/sapphire-paratime": "^1.3.2",
     "@openzeppelin/contracts": "^5.0.2",
     "@uniswap/lib": "^4.0.1-alpha",
